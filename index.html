@@ -279,7 +279,7 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
       </div>
     </div>
   </div>
-  <div class="home-footer">版本 1.0 · 数据实时同步到教师电脑</div>
+  <div class="home-footer">版本 1.0 · 数据实时同步到金山文档云端</div>
 </div>
 
 <!-- ══════════════════════════════
@@ -682,7 +682,7 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
 // ════════════ 配置 ════════════
 const WEEK = 1;           // 1=第一周 2=第二周
 const TEACHER_PWD = 'putian2024';
-const SERVER_URL = 'http://192.168.210.45:8765'; // ← 改成您电脑IP
+const SERVER_URL = 'https://www.kdocs.cn/api/v3/ide/file/525466598815/script/V2-2piIgNovJN2qNOKDUloOua/sync_task'; // 金山文档Webhook
 
 const SAMPLES_W1 = ['S-01','S-02','S-03','S-04'];
 const SAMPLES_W2 = ['S-01','S-02','S-03','S-04','S-05'];
@@ -741,7 +741,25 @@ const KB=[
    source:'Insent数据分析手册；数据处理规程'},
   {title:'传感器AAE鲜味值为负数的深层解释',tag:'无味点',
    content:'AAE鲜味传感器的零点由参比溶液（30mM KCl + 0.3mM酒石酸）定义。\n\n负值含义：样品鲜味响应低于参比溶液设定的零点基准，表示鲜味物质浓度相对较低。\n\n不同负值程度的含义：\n0到-2：轻微低于标准，鲜味物质存在但偏弱\n-2到-5：明显低于标准，鲜味较弱\n低于-5：鲜味物质浓度很低或已明显降解\n\n实际意义：鱼丸储存后AAE从正值变为负值，说明IMP等鲜味物质已降解，产品鲜度下降。这是判断储存变质的重要指标。',
-   source:'Insent传感器原理文档；食品鲜度检测规范'}]
+   source:'Insent传感器原理文档；食品鲜度检测规范'},
+
+  // ══ 无味点精确判定体系（electronicTongueCompleteKB）══
+  {title:'什么是无味点（Tasteless Point）与0位线？',tag:'概念核心-无味点',
+   content:'无味点（Tasteless Point）是人类舌头对某种味道刚好无法感知到的"感官阈值线"。INSENT 电子舌通过"参比溶液（人工唾液）"的电位响应来定义这条基准线。样品的测定数据均是相对于无味点的"相对输出值"。\n\n判定规则：\n· 数据高于无味点 → 判定样品"含有该味道"，属于有效分析数据\n· 数据低于无味点 → 风味学上判定为"无味（未检出）"',
+   source:'INSENT电子舌官方判定体系'},
+  {title:'【核心】酸味（Sourness）的无味点界限与负值的学术意义',tag:'指标判定-酸味',
+   content:'官方无味点：-13\n\n判定逻辑：参比溶液本身由酒石酸与氯化钾配制，自带微弱酸味底噪，因此酸味无味基准线向下偏移至 -13。\n\n关键结论：当学生测出负值（如 -6）时，因 -6 > -13，说明样品酸度响应高出系统无味线，属于"完全有效且具有风味学意义"的数据。\n\n只有当酸味值 ≤ -13 时，才判定为无酸味。\n\n常见误判：看到负值就说"无酸味"——这是错的！必须与 -13 比较，而非与 0 比较。',
+   source:'INSENT电子舌官方判定体系；酸味传感器CA0规范'},
+  {title:'咸味（Saltiness）的无味点偏移与数据判定',tag:'指标判定-咸味',
+   content:'官方无味点：-6\n\n判定逻辑：参比溶液含有氯化钾（KCl），自带微弱盐类咸味电信号，因此咸味无味基准线划定在 -6。\n\n关键结论：样品测定值 > -6（例如 24.83、-3、0、5 等），学术上全部属于"有效数据"，代表咸味可被感官察觉。\n\n只有当咸味值 ≤ -6（如 -8）时，才视为"无咸味、未检出"。\n\n注意：CT0 值为 -3 时，仍代表有咸味，不可误判为"接近无味"。',
+   source:'INSENT电子舌官方判定体系；咸味传感器CT0规范'},
+  {title:'苦味、涩味、鲜味、甜味的主味觉无味点与判定',tag:'指标判定-主味觉',
+   content:'官方无味点：0（绝对值）\n\n判定规则：\n· 测定值 > 0（如鲜味 19.05、苦味 1.29）→ 风味跨越感官阈值，数值越大味道越浓，数据完全有效\n· 测定值 ≤ 0（如涩味 -12.12）→ 风味强度弱于或等于基准液，判定为"无此味觉特征（未检出）"\n\n重要说明：负值属于无效背景噪声，学生无需在报告中强行解释其负值原因。直接描述为"未检出"即可。\n\n适用指标：苦味（C00/BT0）、涩味（AE1）、鲜味（AAE）、甜味（GL1）',
+   source:'INSENT电子舌官方判定体系；主味觉传感器规范'},
+  {title:'苦味回味、涩味回味、丰富性（鲜回味）的无味点与判定',tag:'指标判定-回味',
+   content:'官方无味点：0（绝对值）\n\n技术背景：回味指标通过 CPA（吸附电位测定）技术获得。\n\n判定规则：\n· 回味数值 > 0（如丰富性 4.73、涩回味 1.94）→ 有研究和评价价值，数值越高代表余味在口腔内附着度越高\n· 回味测出负值或 0（如苦回味 -0.30）→ 传感器清洗后膜表面无特异性吸附残留，学术上直接判定为"零回味（无回味）"\n\n实际意义：丰富性（Richness）高的产品余味绵长；苦回味高说明苦味在口腔内持续存在，影响食用体验。',
+   source:'INSENT电子舌官方判定体系；CPA回味测定规范'}
+]
 const E_SENSORS=[
   {id:'AAE',    label:'鲜味 AAE',          hint:'谷氨酸MSG、肌苷酸IMP等鲜味物质',  sk:'umami'},
   {id:'C00',    label:'苦味 C00',          hint:'咖啡因、奎宁、苦味肽',            sk:'bitter'},
@@ -902,11 +920,11 @@ async function sSave(data){
   try{const k='s_recs_w'+WEEK;const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(data);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
   const st=document.getElementById('s_saveSt');
   try{
-    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-    st.className='save-bar sv-ok';st.textContent='✅ 已保存到教师电脑';st.style.display='block';
+    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:data})});
+    st.className='save-bar sv-ok';st.textContent='✅ 已保存到金山文档';st.style.display='block';
     setTimeout(()=>st.style.display='none',2000);
   }catch(e){
-    st.className='save-bar sv-er';st.textContent='⚠ 无法连接服务器，已保存本地，请告知教师';st.style.display='block';
+    st.className='save-bar sv-er';st.textContent='⚠ 云端保存失败，已保存本地';st.style.display='block';
   }
 }
 
@@ -983,7 +1001,7 @@ async function eSubmit(){
   const rec={type:'etongue',id:Date.now(),time:new Date().toLocaleString('zh-CN'),stuId:document.getElementById('e_stuId').value||'匿名',sample:document.getElementById('e_sName').value||'未命名',q:eCurQ,a:eCurA,ev,comment:document.getElementById('e_evCmt').value};
   eRecords.unshift(rec);
   try{localStorage.setItem('e_recs',JSON.stringify(eRecords));}catch(e){}
-  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});}catch(e){}
+  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:rec})});}catch(e){}
   const st=document.getElementById('e_saveSt');st.className='save-bar sv-ok';st.textContent='✅ 已保存';st.style.display='block';
   eRenderRecs();eUpdateStats();setTimeout(()=>ego(5),1200);
 }
@@ -1004,159 +1022,217 @@ function eUpdateStats(){
 }
 function eExport(){let t=`电子舌AI记录\n学号：${document.getElementById('e_stuId').value||'未知'}\n${'='.repeat(40)}\n\n`;eRecords.forEach((r,i)=>{t+=`【${i+1}】${r.time}\n问题：${r.q}\nAI：${r.a}\n评价：${r.ev}\n评论：${r.comment||'无'}\n${'-'.repeat(30)}\n\n`;});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download=`AI记录.txt`;a.click();}
 
-// ════════════ 模块C：老人端 ════════════
+// ════════════ 模块C：老人端（重写版）════════════
 function elderInit(){
-  elderSurvey={};elderSc={};
+  elderSurvey = {};
+  elderSc = {};
   renderElder(0);
 }
 
+// 进度条HTML
+function elProgress(cur, total){
+  var pct = Math.round((cur/total)*100);
+  return '<div style="margin-bottom:20px;">'
+    +'<div style="display:flex;justify-content:space-between;font-size:14px;color:#999;margin-bottom:6px;">'
+    +'<span>第'+cur+'步 / 共'+total+'步</span><span>'+pct+'%</span></div>'
+    +'<div style="background:#f0e0d0;border-radius:99px;height:8px;">'
+    +'<div style="background:#c8600a;border-radius:99px;height:8px;width:'+pct+'%;transition:width .4s;"></div>'
+    +'</div></div>';
+}
+
+// 大字卡片容器
+function elCard(content){
+  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:20px;padding:24px;margin-bottom:14px;">'+content+'</div>';
+}
+
+// 大标题
+function elTitle(txt){
+  return '<div style="font-size:24px;font-weight:700;color:#c8600a;margin-bottom:20px;line-height:1.4;">'+txt+'</div>';
+}
+
+// 上一步按钮（橙色边框，不再灰色）
+function elBackBtn(step){
+  return '<button type="button" onclick="renderElder('+step+')" '
+    +'style="background:#fff;color:#c8600a;border:2px solid #c8600a;border-radius:14px;'
+    +'padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;margin-top:8px;">← 上一步</button>';
+}
+
+// 大选项按钮（文字版，更清晰）
+function elBigBtn(label, sublabel, color, onclick){
+  return '<button type="button" onclick="'+onclick+'" '
+    +'style="width:100%;padding:20px 16px;border-radius:16px;border:3px solid '+color+'33;'
+    +'background:'+color+'11;cursor:pointer;text-align:left;margin-bottom:12px;'
+    +'display:flex;align-items:center;gap:16px;transition:all .15s;"'
+    +'onmouseover="this.style.background=\''+color+'22\'" onmouseout="this.style.background=\''+color+'11\'">'
+    +'<span style="font-size:36px;flex-shrink:0;">'+sublabel+'</span>'
+    +'<span style="font-size:22px;font-weight:700;color:#333;">'+label+'</span>'
+    +'</button>';
+}
+
 function renderElder(step){
-  var c=document.getElementById('elderContent');
-  if(!c)return;
-  if(step===0) c.innerHTML=elHTML0();
-  else if(step===1) c.innerHTML=elHTML1();
-  else if(step===2) c.innerHTML=elHTMLQ('overall','这个食品<b style="color:#c8600a">总体</b>怎么样？',1,3);
-  else if(step===3) c.innerHTML=elHTMLQ('taste','这个食品的<b style="color:#c8600a">味道</b>怎么样？',2,4);
-  else if(step===4) c.innerHTML=elHTMLQ('texture','吃起来<b style="color:#c8600a">软硬</b>怎么样？',3,5);
-  else if(step===5) c.innerHTML=elHTMLQ('saltiness','这个食品<b style="color:#c8600a">咸淡</b>怎么样？',4,6);
-  else if(step===6) c.innerHTML=elHTML6();
-  else if(step===7) c.innerHTML=elHTML7();
-  else console.error('步骤'+step+'不存在');
+  var c = document.getElementById('elderContent');
+  if(!c) return;
+  window.scrollTo(0,0);
+  if(step===0) c.innerHTML = elHTML0();
+  else if(step===1) c.innerHTML = elHTML1();
+  else if(step===2) c.innerHTML = elHTMLRate('overall', '这个食品，<span style="color:#c8600a">总体</span>好不好吃？', 1, 3,
+    ['非常好吃','还可以','不好吃'], ['😋','😐','😕'], ['#2a9a2a','#f5a020','#e05a5a'], ['happy','ok','sad']);
+  else if(step===3) c.innerHTML = elHTMLRate('taste', '这个食品，<span style="color:#c8600a">味道</span>怎么样？', 2, 4,
+    ['味道很好','味道一般','味道不好'], ['👍','🤔','👎'], ['#2a9a2a','#f5a020','#e05a5a'], ['happy','ok','sad']);
+  else if(step===4) c.innerHTML = elHTMLRate('texture', '吃起来<span style="color:#c8600a">软硬</span>怎么样？', 3, 5,
+    ['软硬合适','有点太硬','有点太软'], ['✅','🪨','🍮'], ['#2a9a2a','#f5a020','#7ab8f5'], ['happy','hard','soft']);
+  else if(step===5) c.innerHTML = elHTMLRate('saltiness', '这个食品<span style="color:#c8600a">咸淡</span>怎么样？', 4, 6,
+    ['咸淡合适','有点太咸','有点太淡'], ['✅','🧂','💧'], ['#2a9a2a','#e05a5a','#7ab8f5'], ['happy','salty','bland']);
+  else if(step===6) c.innerHTML = elHTML6();
+  else if(step===7) c.innerHTML = elHTML7();
 }
 
 // 步骤0：基本信息
 function elHTML0(){
-  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
-    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">👋 您好！感谢参与品尝</div>'
-    +'<div style="margin-bottom:14px;">'
-    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">您的编号</label>'
-    +'<input id="el_id" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="请输入编号">'
+  return elCard(
+    elTitle('👋 您好！感谢参与品尝')
+    +'<div style="margin-bottom:18px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">您的编号</div>'
+    +'<input id="el_id" style="border:2px solid #f0c090;border-radius:12px;padding:14px 18px;font-size:22px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="请输入编号">'
     +'</div>'
-    +'<div style="margin-bottom:14px;">'
-    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">您的年龄</label>'
-    +'<select id="el_age" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;appearance:auto;">'
-    +'<option value="">请选择</option>'
-    +'<option value="60-65">60-65岁</option>'
-    +'<option value="65-70">65-70岁</option>'
-    +'<option value="70-75">70-75岁</option>'
-    +'<option value="75-80">75-80岁</option>'
-    +'<option value="80+">80岁以上</option>'
-    +'</select>'
-    +'</div>'
-    +'<div style="margin-bottom:16px;">'
-    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">今天身体状况</label>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-    +'<button id="hb0" type="button" onclick="elH(this,\'好\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😊 很好</button>'
-    +'<button id="hb1" type="button" onclick="elH(this,\'一般\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😐 一般</button>'
-    +'<button id="hb2" type="button" onclick="elH(this,\'不太好\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😕 不太好</button>'
-    +'<button id="hb3" type="button" onclick="elH(this,\'感冒\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">🤧 感冒</button>'
+    +'<div style="margin-bottom:18px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">您的年龄</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="ageOpts">'
+    +'<button type="button" data-age="60-65" onclick="elSelAge(this)" style="padding:16px;border-radius:12px;border:2px solid #f0c090;background:#fff8f0;font-size:18px;font-weight:700;color:#555;cursor:pointer;">60-65岁</button>'
+    +'<button type="button" data-age="65-70" onclick="elSelAge(this)" style="padding:16px;border-radius:12px;border:2px solid #f0c090;background:#fff8f0;font-size:18px;font-weight:700;color:#555;cursor:pointer;">65-70岁</button>'
+    +'<button type="button" data-age="70-75" onclick="elSelAge(this)" style="padding:16px;border-radius:12px;border:2px solid #f0c090;background:#fff8f0;font-size:18px;font-weight:700;color:#555;cursor:pointer;">70-75岁</button>'
+    +'<button type="button" data-age="75-80" onclick="elSelAge(this)" style="padding:16px;border-radius:12px;border:2px solid #f0c090;background:#fff8f0;font-size:18px;font-weight:700;color:#555;cursor:pointer;">75-80岁</button>'
+    +'<button type="button" data-age="80+" onclick="elSelAge(this)" style="padding:16px;border-radius:12px;border:2px solid #f0c090;background:#fff8f0;font-size:18px;font-weight:700;color:#555;cursor:pointer;grid-column:span 2;">80岁以上</button>'
     +'</div>'
     +'</div>'
-    +'<button type="button" onclick="elGo1()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>'
-    +'</div>';
+    +'<div style="margin-bottom:20px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">今天身体状况</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="healthOpts">'
+    +'<button type="button" data-health="好" onclick="elSelHealth(this)" style="padding:16px;border-radius:12px;border:2px solid #ddd;background:#fff;font-size:20px;font-weight:700;color:#333;cursor:pointer;">😊 很好</button>'
+    +'<button type="button" data-health="一般" onclick="elSelHealth(this)" style="padding:16px;border-radius:12px;border:2px solid #ddd;background:#fff;font-size:20px;font-weight:700;color:#333;cursor:pointer;">😐 一般</button>'
+    +'<button type="button" data-health="不太好" onclick="elSelHealth(this)" style="padding:16px;border-radius:12px;border:2px solid #ddd;background:#fff;font-size:20px;font-weight:700;color:#333;cursor:pointer;">😕 不太好</button>'
+    +'<button type="button" data-health="感冒" onclick="elSelHealth(this)" style="padding:16px;border-radius:12px;border:2px solid #ddd;background:#fff;font-size:20px;font-weight:700;color:#333;cursor:pointer;">🤧 感冒</button>'
+    +'</div>'
+    +'</div>'
+    +'<button type="button" onclick="elGo1()" '
+    +'style="background:#c8600a;color:#fff;border:none;border-radius:14px;padding:20px;font-size:20px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>'
+  );
 }
 
 // 步骤1：样品信息
 function elHTML1(){
-  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
-    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🍜 今天品尝的食品</div>'
-    +'<div style="margin-bottom:14px;">'
-    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">食品名称</label>'
-    +'<input id="el_food" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：海带">'
+  return elProgress(1,7)
+  + elCard(
+    elTitle('🍜 今天品尝的食品')
+    +'<div style="margin-bottom:18px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">食品名称</div>'
+    +'<input id="el_food" style="border:2px solid #f0c090;border-radius:12px;padding:14px 18px;font-size:22px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：海带">'
     +'</div>'
-    +'<div style="margin-bottom:16px;">'
-    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">样品编号</label>'
-    +'<input id="el_code" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：S-01">'
+    +'<div style="margin-bottom:20px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">样品编号</div>'
+    +'<input id="el_code" style="border:2px solid #f0c090;border-radius:12px;padding:14px 18px;font-size:22px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：S-01">'
     +'</div>'
-    +'<div style="display:flex;gap:10px;">'
-    +'<button type="button" onclick="renderElder(0)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>'
-    +'<button type="button" onclick="elGo2()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">下一步 →</button>'
-    +'</div>'
-    +'</div>';
+    +'<button type="button" onclick="elGo2()" '
+    +'style="background:#c8600a;color:#fff;border:none;border-radius:14px;padding:20px;font-size:20px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>'
+    + elBackBtn(0)
+  );
 }
 
-// 步骤2-5：表情评分页（通用）
-// 关键：用data属性存参数，onclick只传this，避免引号嵌套
-function elHTMLQ(dim, question, prevStep, nextStep){
-  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
-    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:18px;line-height:1.5;">'+question+'</div>'
-    +'<div style="display:flex;gap:12px;justify-content:center;margin-bottom:18px;">'
-    +'<button type="button" '
-    +'data-dim="'+dim+'" data-val="happy" data-next="'+nextStep+'" '
-    +'onclick="elRate(this)" '
-    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
-    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😊</span>'
-    +'<span style="font-size:16px;font-weight:700;color:#333;">很好</span>'
-    +'</button>'
-    +'<button type="button" '
-    +'data-dim="'+dim+'" data-val="ok" data-next="'+nextStep+'" '
-    +'onclick="elRate(this)" '
-    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
-    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😐</span>'
-    +'<span style="font-size:16px;font-weight:700;color:#333;">一般</span>'
-    +'</button>'
-    +'<button type="button" '
-    +'data-dim="'+dim+'" data-val="sad" data-next="'+nextStep+'" '
-    +'onclick="elRate(this)" '
-    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
-    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😞</span>'
-    +'<span style="font-size:16px;font-weight:700;color:#333;">不好</span>'
-    +'</button>'
-    +'</div>'
-    +'<button type="button" onclick="renderElder('+prevStep+')" '
-    +'style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;width:100%;cursor:pointer;">← 上一步</button>'
-    +'</div>';
+// 步骤2-5：通用评分页（大文字按钮版）
+function elHTMLRate(dim, question, prevStep, nextStep, labels, icons, colors, vals){
+  var stepNum = nextStep - 1; // 当前步骤编号
+  var btns = '';
+  for(var i=0;i<labels.length;i++){
+    btns += '<button type="button" '
+      +'data-dim="'+dim+'" data-val="'+vals[i]+'" data-next="'+nextStep+'" '
+      +'onclick="elRate(this)" '
+      +'style="width:100%;padding:22px 18px;border-radius:16px;border:3px solid '+colors[i]+'44;'
+      +'background:'+colors[i]+'0d;cursor:pointer;text-align:left;margin-bottom:12px;'
+      +'display:flex;align-items:center;gap:18px;">'
+      +'<span style="font-size:40px;flex-shrink:0;">'+icons[i]+'</span>'
+      +'<span style="font-size:24px;font-weight:700;color:#222;">'+labels[i]+'</span>'
+      +'</button>';
+  }
+  return elProgress(stepNum, 7)
+  + elCard(
+    '<div style="font-size:24px;font-weight:700;color:#333;margin-bottom:22px;line-height:1.5;">'+question+'</div>'
+    + btns
+    + elBackBtn(prevStep)
+  );
 }
 
-// 步骤6：购买意愿
+// 步骤6：购买意愿 + 留言
 function elHTML6(){
-  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
-    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">如果在超市看到，您会买吗？</div>'
-    +'<div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">'
-    +'<button type="button" data-buy="yes" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">🛒<br>会买</button>'
-    +'<button type="button" data-buy="maybe" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">🤔<br>考虑</button>'
-    +'<button type="button" data-buy="no" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">❌<br>不买</button>'
+  return elProgress(6,7)
+  + elCard(
+    elTitle('🛒 如果在超市看到，您会买吗？')
+    +'<button type="button" data-buy="yes" onclick="elBuy(this)" '
+    +'style="width:100%;padding:22px 18px;border-radius:16px;border:3px solid #2a9a2a44;background:#2a9a2a0d;'
+    +'cursor:pointer;text-align:left;margin-bottom:12px;display:flex;align-items:center;gap:18px;">'
+    +'<span style="font-size:40px;">🛒</span><span style="font-size:24px;font-weight:700;color:#222;">会买</span></button>'
+    +'<button type="button" data-buy="maybe" onclick="elBuy(this)" '
+    +'style="width:100%;padding:22px 18px;border-radius:16px;border:3px solid #f5a02044;background:#f5a0200d;'
+    +'cursor:pointer;text-align:left;margin-bottom:12px;display:flex;align-items:center;gap:18px;">'
+    +'<span style="font-size:40px;">🤔</span><span style="font-size:24px;font-weight:700;color:#222;">考虑一下</span></button>'
+    +'<button type="button" data-buy="no" onclick="elBuy(this)" '
+    +'style="width:100%;padding:22px 18px;border-radius:16px;border:3px solid #e05a5a44;background:#e05a5a0d;'
+    +'cursor:pointer;text-align:left;margin-bottom:16px;display:flex;align-items:center;gap:18px;">'
+    +'<span style="font-size:40px;">❌</span><span style="font-size:24px;font-weight:700;color:#222;">不买</span></button>'
+    +'<div style="margin-bottom:16px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:10px;">有什么意见？（可不填）</div>'
+    +'<textarea id="el_comment" style="border:2px solid #f0c090;border-radius:12px;padding:14px;font-size:20px;width:100%;min-height:80px;font-family:inherit;background:#fff8f0;color:#333;" placeholder="例：太咸了、太硬了"></textarea>'
     +'</div>'
-    +'<div style="margin-bottom:14px;">'
-    +'<label style="display:block;font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">有什么意见？（可不填）</label>'
-    +'<textarea id="el_comment" style="border:2px solid #f0c090;border-radius:10px;padding:12px;font-size:16px;width:100%;min-height:60px;font-family:inherit;background:#fff8f0;color:#333;" placeholder="例：太咸了 太硬了"></textarea>'
-    +'</div>'
-    +'<div style="display:flex;gap:10px;">'
-    +'<button type="button" onclick="renderElder(5)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>'
-    +'<button type="button" onclick="elSubmit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">✓ 完成品尝</button>'
-    +'</div>'
-    +'</div>';
+    +'<button type="button" onclick="elSubmit()" '
+    +'style="background:#c8600a;color:#fff;border:none;border-radius:14px;padding:20px;font-size:22px;font-weight:700;width:100%;cursor:pointer;margin-bottom:8px;">✓ 完成品尝</button>'
+    + elBackBtn(5)
+  );
 }
 
-// 步骤7：完成报告
+// 步骤7：完成感谢页
 function elHTML7(){
-  return '<div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid #f0c080;border-radius:16px;padding:24px;text-align:center;">'
-    +'<div id="el_re" style="font-size:64px;margin-bottom:12px;">🎉</div>'
-    +'<div style="font-size:24px;font-weight:700;color:#c8600a;margin-bottom:10px;">感谢您的参与！</div>'
-    +'<div id="el_rt" style="font-size:17px;color:#333;line-height:1.8;margin-bottom:16px;"></div>'
-    +'<div id="el_rp" style="background:#fff;border-radius:10px;padding:14px;border:1px solid #f0d0b0;text-align:left;"></div>'
-    +'<button type="button" onclick="elderInit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;margin-top:16px;">继续下一位品尝者</button>'
-    +'</div>';
+  return elCard(
+    '<div style="text-align:center;padding:10px 0;">'
+    +'<div id="el_re" style="font-size:72px;margin-bottom:16px;">🎉</div>'
+    +'<div style="font-size:26px;font-weight:700;color:#c8600a;margin-bottom:12px;">感谢您的参与！</div>'
+    +'<div id="el_rt" style="font-size:20px;color:#555;line-height:1.8;margin-bottom:20px;"></div>'
+    +'<div id="el_rp" style="background:#fff8f0;border-radius:12px;padding:16px;border:2px solid #f0d0b0;text-align:left;margin-bottom:20px;"></div>'
+    +'<button type="button" onclick="elderInit()" '
+    +'style="background:#c8600a;color:#fff;border:none;border-radius:14px;padding:20px;font-size:20px;font-weight:700;width:100%;cursor:pointer;">继续下一位品尝者</button>'
+    +'</div>'
+  );
 }
 
-// ── 事件处理函数 ──
-function elH(el,val){
-  // 重置所有健康按钮
-  ['hb0','hb1','hb2','hb3'].forEach(function(id){
-    var b=document.getElementById(id);
-    if(b){b.style.border='2px solid #ddd';b.style.background='#fff';}
+// ── 事件处理 ──
+function elSelAge(el){
+  document.querySelectorAll('#ageOpts button').forEach(function(b){
+    b.style.border='2px solid #f0c090';b.style.background='#fff8f0';b.style.color='#555';
   });
-  el.style.border='3px solid #c8600a';
-  el.style.background='#fff0e0';
-  elderSurvey.health=val;
+  el.style.border='3px solid #c8600a';el.style.background='#fff0e0';el.style.color='#c8600a';
+  elderSurvey.age=el.getAttribute('data-age');
+}
+
+function elSelHealth(el){
+  document.querySelectorAll('#healthOpts button').forEach(function(b){
+    b.style.border='2px solid #ddd';b.style.background='#fff';b.style.color='#333';
+  });
+  el.style.border='3px solid #c8600a';el.style.background='#fff0e0';el.style.color='#c8600a';
+  elderSurvey.health=el.getAttribute('data-health');
+}
+
+// 兼容旧的 elH 调用
+function elH(el, val){
+  elderSurvey.health = val;
+  document.querySelectorAll('#healthOpts button').forEach(function(b){
+    b.style.border='2px solid #ddd';b.style.background='#fff';
+  });
+  if(el){el.style.border='3px solid #c8600a';el.style.background='#fff0e0';}
 }
 
 function elGo1(){
   var idEl=document.getElementById('el_id');
-  var ageEl=document.getElementById('el_age');
   elderSurvey.id=idEl?idEl.value||'未填':'未填';
-  elderSurvey.age=ageEl?ageEl.value||'未填':'未填';
-  if(!elderSurvey.health){alert('请先选择今天的身体状况');return;}
+  if(!elderSurvey.age){alert('请先选择年龄');return;}
+  if(!elderSurvey.health){alert('请先选择身体状况');return;}
   renderElder(1);
 }
 
@@ -1168,7 +1244,6 @@ function elGo2(){
   renderElder(2);
 }
 
-// 核心修复：用data属性传参，避免引号嵌套
 function elRate(el){
   var dim=el.getAttribute('data-dim');
   var val=el.getAttribute('data-val');
@@ -1176,27 +1251,28 @@ function elRate(el){
   // 高亮选中
   var parent=el.parentElement;
   parent.querySelectorAll('button').forEach(function(b){
-    b.style.border='3px solid #ddd';
-    b.style.background='#fff';
+    b.style.opacity='0.5';b.style.transform='scale(1)';
   });
-  el.style.border='3px solid #c8600a';
-  el.style.background='#fff0e0';
+  el.style.opacity='1';el.style.transform='scale(1.03)';
+  el.style.border='3px solid #c8600a';el.style.background='#fff0e0';
   elderSc[dim]=val;
-  // 延迟跳转，让老人看到选中效果
-  setTimeout(function(){renderElder(next);}, 400);
+  // 延迟跳转
+  setTimeout(function(){renderElder(next);},350);
 }
 
 function elBuy(el){
-  var val=el.getAttribute('data-buy');
-  el.parentElement.querySelectorAll('button').forEach(function(b){
-    b.style.border='3px solid #ddd';b.style.background='#fff';
+  el.parentElement.querySelectorAll('button[data-buy]').forEach(function(b){
+    b.style.border='3px solid '+b.style.borderColor;
+    b.style.opacity='0.6';
   });
+  el.style.opacity='1';
   el.style.border='3px solid #c8600a';el.style.background='#fff0e0';
-  elderSurvey.buy=val;
+  elderSurvey.buy=el.getAttribute('data-buy');
 }
 
 async function elSubmit(){
   var commentEl=document.getElementById('el_comment');
+  if(!elderSurvey.buy){alert('请先选择购买意愿');return;}
   var rec={
     type:'elder',id:Date.now(),
     time:new Date().toLocaleString('zh-CN'),
@@ -1212,18 +1288,14 @@ async function elSubmit(){
     elderSalt:elderSc.saltiness||'未填',
     elderComment:commentEl?commentEl.value:''
   };
-  console.log('老人端提交:', rec);
   try{
     var k='e_recs';
     var ex=JSON.parse(localStorage.getItem(k)||'[]');
     ex.push(rec);localStorage.setItem(k,JSON.stringify(ex));
-    console.log('本地保存成功，共'+ex.length+'条');
-  }catch(e){console.error('本地保存失败',e);}
+  }catch(e){}
   try{
-    await fetch(SERVER_URL,{method:'POST',mode:'cors',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
-    console.log('服务器保存成功');
-  }catch(e){console.warn('服务器未连接，已保存本地');}
+    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:rec})});
+  }catch(e){}
   renderElder(7);
   var ov=elderSc.overall;
   var re2=document.getElementById('el_re');
@@ -1233,20 +1305,18 @@ async function elSubmit(){
   if(rt)rt.textContent=ov==='happy'?'您对这款食品评价很好！感谢参与。':ov==='ok'?'您觉得这款食品一般，感谢诚实反馈！':'感谢参与，您的意见对改进产品很重要！';
   var tips=[];
   if(elderSc.taste==='sad')tips.push('味道方面还需改进');
-  if(elderSc.texture==='sad')tips.push('口感可以更软糯一些');
-  if(elderSc.saltiness==='sad')tips.push('咸淡需要调整');
+  if(elderSc.texture==='hard')tips.push('口感可以更软糯一些');
+  if(elderSc.texture==='soft')tips.push('口感可以稍微紧实一些');
+  if(elderSc.saltiness==='salty')tips.push('咸度可以适当减少');
+  if(elderSc.saltiness==='bland')tips.push('咸度可以适当增加');
   if(rp)rp.innerHTML=tips.length
-    ?tips.map(function(t){return '<div style="font-size:16px;color:#555;padding:6px 0;border-bottom:1px solid #f0f0f0;">📌 '+t+'</div>';}).join('')
-    :'<div style="font-size:16px;color:#2a9a2a;">✅ 各方面评价都不错！</div>';
+    ?tips.map(function(t){return '<div style="font-size:18px;color:#555;padding:8px 0;border-bottom:1px solid #f0f0f0;">📌 '+t+'</div>';}).join('')
+    :'<div style="font-size:18px;color:#2a9a2a;">✅ 各方面评价都不错！</div>';
 }
 
-// 兼容旧调用
+// 兼容旧函数名
 function elderSubmit(){return elSubmit();}
-function elderSelHealth(el,val){return elH(el,val);}
-
-// 兼容旧函数名（保留）
-function elderSubmit(){return elSubmit();}
-function elderSelHealth(el,val){return elSelH(el,val);}
+function elderSelHealth(el,val){return elSelHealth(el,val);}
 
 
 // ════════ 模块E：PCA分析 ════════
