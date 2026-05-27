@@ -658,9 +658,42 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
         <input type="password" id="t_pwd" placeholder="教师密码" style="flex:1;max-width:200px;">
         <button class="btn btn-g" onclick="tUnlock()" style="width:auto;padding:10px 18px;">验证</button>
       </div>
-      <div style="font-size:10px;color:var(--dim);margin-top:6px;">默认密码：putian2024</div>
     </div>
     <div id="t_dash" style="display:none;">
+
+      <!-- 实验设置 -->
+      <div class="card" style="border-color:#c8922a55;">
+        <div class="ct">⚙️ 实验设置<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;">修改后点保存，学生端立即生效</span></div>
+        <div style="margin-bottom:12px;">
+          <label class="fl">本次实验名称（显示在学生端）</label>
+          <input id="t_session" placeholder="例：第1次、第3次" style="font-size:15px;">
+        </div>
+        <div style="margin-bottom:14px;">
+          <label class="fl">盲测样品对照表（每行：盲测编号 = 真实名称）</label>
+          <div style="font-size:11px;color:#666;margin-bottom:6px;background:#1a1200;padding:8px 10px;border-radius:6px;line-height:1.8;">
+            格式：左边是学生看到的编号，右边是真实产品名<br>
+            例：S-01 = 海带原味（莆田产）<br>
+            　　S-02 = 海带减盐30%（实验配方）
+          </div>
+          <textarea id="t_samples" rows="6" placeholder="S-01 = 海带原味&#10;S-02 = 海带减盐30%&#10;S-03 = 海带麻辣&#10;S-04 = 对照组" style="font-size:13px;line-height:1.9;font-family:'Courier New',monospace;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-g" onclick="tSaveConfig()" style="flex:1;">💾 保存设置</button>
+          <button class="btn btn-o" onclick="tLoadConfigUI()" style="width:auto;padding:10px 14px;">↺ 重置</button>
+        </div>
+        <div id="t_cfg_st" style="display:none;margin-top:8px;font-size:12px;color:var(--green);text-align:center;"></div>
+      </div>
+
+      <!-- 样品揭盲对照表（仅教师可见）-->
+      <div class="card" style="border-color:#7ab8f555;display:none;" id="t_blindcard">
+        <div class="ct">🔓 揭盲对照表<span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:8px;">仅在此界面显示，学生端不可见</span></div>
+        <div id="t_blindtable"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-g" onclick="tExportRevealed()" style="flex:1;">📥 导出已揭盲CSV（含真实名称）</button>
+          <button class="btn btn-o" onclick="tExport()" style="flex:1;">📥 导出盲测CSV（保留编号）</button>
+        </div>
+      </div>
+
       <div class="t-stats" id="t_stats"></div>
       <div class="card">
         <div class="ct">📊 样品对比（全班平均分）</div>
@@ -680,13 +713,25 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
 
 <script>
 // ════════════ 配置 ════════════
-const WEEK = 1;           // 1=第一周 2=第二周
 const TEACHER_PWD = 'putian2024';
-const SERVER_URL = 'https://www.kdocs.cn/api/v3/ide/file/525466598815/script/V2-2piIgNovJN2qNOKDUloOua/sync_task'; // 金山文档Webhook
+const SERVER_URL = 'https://www.kdocs.cn/api/v3/ide/file/525466598815/script/V2-2piIgNovJN2qNOKDUloOua/sync_task';
 
-const SAMPLES_W1 = ['S-01','S-02','S-03','S-04'];
-const SAMPLES_W2 = ['S-01','S-02','S-03','S-04','S-05'];
-const SAMPLES = WEEK===1 ? SAMPLES_W1 : SAMPLES_W2;
+// 从本地存储读取实验设置（教师界面可修改）
+function loadExpConfig(){
+  try{
+    const c = JSON.parse(localStorage.getItem('exp_config')||'null');
+    if(c) return c;
+  }catch(e){}
+  // 默认值
+  return {
+    session: '第1次',
+    samples: ['S-01','S-02','S-03','S-04']
+  };
+}
+let EXP_CONFIG = loadExpConfig();
+// 兼容旧变量名
+let WEEK = 1;
+let SAMPLES = EXP_CONFIG.samples;
 
 // ════════════ 知识库 ════════════
 const KB=[
@@ -808,8 +853,9 @@ function backHome(){
 
 // ════════════ 模块A：感官评价 ════════════
 function sInit(){
-  document.getElementById('weekTag').textContent=`第${WEEK===1?'一':'二'}周`;
-  if(WEEK===2) document.getElementById('s_compareWrap').style.display='block';
+  EXP_CONFIG = loadExpConfig();
+  SAMPLES = EXP_CONFIG.samples;
+  document.getElementById('weekTag').textContent = EXP_CONFIG.session||'第1次';
 }
 function sgo(n){
   document.querySelectorAll('#appSensory .panel').forEach((p,i)=>p.classList.toggle('on',i===n));
@@ -917,10 +963,10 @@ function sShowSummary(){
     </div>`;}).join('');
 }
 async function sSave(data){
-  try{const k='s_recs_w'+WEEK;const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(data);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
+  try{const k='s_recs';const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(data);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
   const st=document.getElementById('s_saveSt');
   try{
-    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:data})});
+    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json','AirScript-Token':'61kxvaUFiyNrPaQhpFW9JP'},body:JSON.stringify({body:data})});
     st.className='save-bar sv-ok';st.textContent='✅ 已保存到金山文档';st.style.display='block';
     setTimeout(()=>st.style.display='none',2000);
   }catch(e){
@@ -1001,7 +1047,7 @@ async function eSubmit(){
   const rec={type:'etongue',id:Date.now(),time:new Date().toLocaleString('zh-CN'),stuId:document.getElementById('e_stuId').value||'匿名',sample:document.getElementById('e_sName').value||'未命名',q:eCurQ,a:eCurA,ev,comment:document.getElementById('e_evCmt').value};
   eRecords.unshift(rec);
   try{localStorage.setItem('e_recs',JSON.stringify(eRecords));}catch(e){}
-  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:rec})});}catch(e){}
+  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json','AirScript-Token':'61kxvaUFiyNrPaQhpFW9JP'},body:JSON.stringify({body:rec})});}catch(e){}
   const st=document.getElementById('e_saveSt');st.className='save-bar sv-ok';st.textContent='✅ 已保存';st.style.display='block';
   eRenderRecs();eUpdateStats();setTimeout(()=>ego(5),1200);
 }
@@ -1294,7 +1340,7 @@ async function elSubmit(){
     ex.push(rec);localStorage.setItem(k,JSON.stringify(ex));
   }catch(e){}
   try{
-    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:rec})});
+    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json','AirScript-Token':'61kxvaUFiyNrPaQhpFW9JP'},body:JSON.stringify({body:rec})});
   }catch(e){}
   renderElder(7);
   var ov=elderSc.overall;
@@ -1467,14 +1513,96 @@ async function pcaAI(){
 }
 function pcaDownload(){if(!pcaMainChart){alert('请先生成PCA图');return;}var a=document.createElement('a');a.href=pcaMainChart.toBase64Image();a.download='PCA图_'+new Date().toLocaleDateString('zh-CN')+'.png';a.click();}
 
-function tUnlock(){if(document.getElementById('t_pwd').value===TEACHER_PWD){document.getElementById('t_lock').style.display='none';document.getElementById('t_dash').style.display='block';tRefresh();}else alert('密码错误');}
+function tUnlock(){
+  if(document.getElementById('t_pwd').value===TEACHER_PWD){
+    document.getElementById('t_lock').style.display='none';
+    document.getElementById('t_dash').style.display='block';
+    tLoadConfigUI();
+    tRefresh();
+    tRenderBlindTable(loadExpConfig());
+  }else alert('密码错误');
+}
+function tLoadConfigUI(){
+  const c = loadExpConfig();
+  document.getElementById('t_session').value = c.session||'第1次';
+  // 还原对照表格式
+  const lines = (c.samples||[]).map((s,i)=>{
+    const realName = (c.realNames||{})[s]||'';
+    return realName ? s+' = '+realName : s;
+  });
+  document.getElementById('t_samples').value = lines.join('\n');
+  tRenderBlindTable(c);
+}
+function tSaveConfig(){
+  const session = document.getElementById('t_session').value.trim()||'第1次';
+  const raw = document.getElementById('t_samples').value;
+  const lines = raw.split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+  if(lines.length===0){alert('请至少填写一个样品');return;}
+  // 解析 "S-01 = 真实名称" 格式
+  const samples = [];
+  const realNames = {};
+  lines.forEach(line=>{
+    if(line.includes('=')){
+      const [code, name] = line.split('=').map(s=>s.trim());
+      if(code){samples.push(code); if(name) realNames[code]=name;}
+    } else {
+      samples.push(line);
+    }
+  });
+  const cfg = {session, samples, realNames};
+  localStorage.setItem('exp_config', JSON.stringify(cfg));
+  EXP_CONFIG = cfg;
+  SAMPLES = cfg.samples;
+  tRenderBlindTable(cfg);
+  const st = document.getElementById('t_cfg_st');
+  st.textContent = '✅ 已保存！共 '+samples.length+' 个样品，实验名称：'+session;
+  st.style.display='block';
+  setTimeout(()=>st.style.display='none', 3000);
+}
+function tRenderBlindTable(cfg){
+  const card = document.getElementById('t_blindcard');
+  const tbl = document.getElementById('t_blindtable');
+  if(!cfg||!cfg.samples||cfg.samples.length===0){card.style.display='none';return;}
+  const hasReal = cfg.realNames && Object.keys(cfg.realNames).length>0;
+  card.style.display = hasReal ? 'block' : 'none';
+  if(!hasReal) return;
+  let h = '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+    +'<tr><th style="background:#0d1a2a;color:var(--blue);padding:8px 10px;border:1px solid #1a3a4a;text-align:left;">盲测编号（学生看到）</th>'
+    +'<th style="background:#0d1a2a;color:var(--gold);padding:8px 10px;border:1px solid #1a3a4a;text-align:left;">真实产品名称</th></tr>';
+  cfg.samples.forEach(s=>{
+    const real = (cfg.realNames||{})[s]||'（未设置）';
+    h+='<tr><td style="padding:7px 10px;border:1px solid #1a2a1a;color:#ccc;font-family:monospace;">'+s+'</td>'
+      +'<td style="padding:7px 10px;border:1px solid #1a2a1a;color:var(--gold);font-weight:700;">'+real+'</td></tr>';
+  });
+  tbl.innerHTML = h+'</table>';
+}
+function tExportRevealed(){
+  const cfg = loadExpConfig();
+  const realNames = cfg.realNames||{};
+  const h='时间,类型,ID,盲测编号,真实名称,鲜味,咸淡,辣味,酸味,回味,软硬,咀嚼感,总体,购买意愿,价格意愿,文字评价\n';
+  const rows=allRecords.map(r=>{
+    const code=r.sample||r.food||'—';
+    const real=realNames[code]||'—';
+    return [r.time,r.type||'感官',r.stuId||r.elderId||'匿名',code,real,
+      r.umami||'—',r.salt||'—',r.spicy||'—',r.sour||'—',
+      r.after||r.aftertaste||'—',r.texture||'—',r.chew||'—',r.overall||'—',
+      r.buy||'—',r.price||'—',(r.comment||'').replace(/,/g,'，')].join(',');
+  }).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+h+rows],{type:'text/csv;charset=utf-8'}));
+  a.download='食品感知数据_揭盲_'+(cfg.session||'导出')+'_'+new Date().toLocaleDateString('zh-CN')+'.csv';
+  a.click();
+}
 function tRefresh(){
+  EXP_CONFIG = loadExpConfig();
+  SAMPLES = EXP_CONFIG.samples;
   let all=[];
-  for(let i=1;i<=2;i++){try{const s=localStorage.getItem('s_recs_w'+i);if(s)all=[...all,...JSON.parse(s)];}catch(e){}}
+  // 读取所有历史记录（不限周次）
+  for(let i=1;i<=20;i++){try{const s=localStorage.getItem('s_recs_w'+i);if(s)all=[...all,...JSON.parse(s)];}catch(e){}}
+  try{const s=localStorage.getItem('s_recs');if(s)all=[...all,...JSON.parse(s)];}catch(e){}
   try{const e=localStorage.getItem('e_recs');if(e)all=[...all,...JSON.parse(e)];}catch(e){}
-  try{const el=localStorage.getItem('e_recs');if(el)all=[...all,...JSON.parse(el).filter(r=>r.type==='elder')];}catch(e){}
   allRecords=all;
-  const sRecs=all.filter(r=>!r.type||r.type==='sensory_student');
+  const sRecs=all.filter(r=>!r.type||r.type==='sensory_student'||r.type==='sensory');
   const eRecs=all.filter(r=>r.type==='etongue');
   const elRecs=all.filter(r=>r.type==='elder');
   document.getElementById('t_stats').innerHTML=`
@@ -1508,7 +1636,7 @@ function tRenderRecs(data){
 function tExport(){
   const h='时间,类型,ID,样品,鲜味,咸淡,辣味,酸味,回味,软硬,咀嚼感,总体,购买意愿,价格意愿,文字评价\n';
   const rows=allRecords.map(r=>[r.time,r.type||'感官',r.stuId||r.elderId||'匿名',r.sample||r.food||'—',r.umami||'—',r.salt||'—',r.spicy||'—',r.sour||'—',r.after||r.aftertaste||'—',r.texture||'—',r.chew||'—',r.overall||'—',r.buy||'—',r.price||'—',(r.comment||'').replace(/,/g,'，')].join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+rows],{type:'text/csv;charset=utf-8'}));a.download=`食品感知数据_第${WEEK}周.csv`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+rows],{type:'text/csv;charset=utf-8'}));a.download=`食品感知数据_${EXP_CONFIG.session||'导出'}_${new Date().toLocaleDateString('zh-CN')}.csv`;a.click();
 }
 </script>
 </body>
