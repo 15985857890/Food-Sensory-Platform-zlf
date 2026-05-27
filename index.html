@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>食品感知AI平台 · 莆田学院</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#f5c842;--gold2:#c8922a;--green:#7bc32a;--red:#e05a5a;--blue:#7ab8f5;
+  --bg:#0a0a0a;--bg1:#111;--bg2:#141414;--bg3:#1e1e1e;
+  --border:#2a2a2a;--text:#f0f0f0;--muted:#888;--dim:#444;
+}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ══ 主入口 ══ */
+#home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:0;}
+.home-logo{font-size:48px;margin-bottom:12px;}
+.home-title{font-size:22px;font-weight:700;color:var(--gold);text-align:center;}
+.home-sub{font-size:12px;color:var(--dim);text-align:center;margin-top:4px;margin-bottom:28px;}
+
+.module-grid{display:flex;flex-direction:column;gap:12px;width:100%;max-width:400px;}
+.mod-card{border-radius:14px;padding:18px 20px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;display:flex;align-items:center;gap:16px;
+  border:2px solid transparent;}
+.mod-card:hover{transform:translateY(-2px);}
+.mod-icon{font-size:36px;flex-shrink:0;width:52px;height:52px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;}
+.mod-text{}
+.mod-name{font-size:16px;font-weight:700;margin-bottom:3px;}
+.mod-desc{font-size:11px;line-height:1.5;opacity:.8;}
+
+.mod-sensory{background:#1a1200;border-color:#c8922a55;}
+.mod-sensory .mod-icon{background:#c8922a22;}
+.mod-sensory .mod-name{color:var(--gold);}
+.mod-sensory .mod-desc{color:#c8922a;}
+
+.mod-etongue{background:#001a0a;border-color:#7bc32a55;}
+.mod-etongue .mod-icon{background:#7bc32a22;}
+.mod-etongue .mod-name{color:var(--green);}
+.mod-etongue .mod-desc{color:#5a9a20;}
+
+.mod-elder{background:#1a0f00;border-color:#f5a02055;}
+.mod-elder .mod-icon{background:#f5a02022;}
+.mod-elder .mod-name{color:#f5a020;}
+.mod-elder .mod-desc{color:#c87a10;}
+
+.mod-teacher{background:#001020;border-color:#7ab8f555;}
+.mod-teacher .mod-icon{background:#7ab8f522;}
+.mod-teacher .mod-name{color:var(--blue);}
+.mod-teacher .mod-desc{color:#5a88c5;}
+
+.home-footer{font-size:10px;color:var(--dim);text-align:center;margin-top:20px;}
+
+/* ══ 通用顶栏 ══ */
+.app{display:none;}
+.hdr{background:var(--bg1);border-bottom:2px solid var(--gold2);
+  padding:11px 16px;display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:100;}
+.hdr-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold2),var(--gold));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hdr h1{font-size:15px;font-weight:700;color:var(--gold);}
+.hdr p{font-size:10px;color:var(--dim);}
+.hdr-back{margin-left:auto;padding:5px 12px;border-radius:6px;
+  border:1px solid #333;background:none;color:var(--muted);font-size:11px;cursor:pointer;}
+.hdr-badge{margin-left:auto;padding:3px 10px;border-radius:10px;
+  font-size:11px;font-weight:700;background:#1a1200;border:1px solid var(--gold2);color:var(--gold);}
+
+/* ══ 通用布局 ══ */
+.tabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:10px 13px;font-size:11px;color:var(--dim);cursor:pointer;border:none;
+  background:none;border-bottom:2px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+.tn{width:15px;height:15px;border-radius:50%;background:#222;font-size:9px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;}
+.tab.on .tn{background:var(--gold);color:#000;}
+
+.main{padding:14px;max-width:720px;margin:0 auto;}
+.panel{display:none;}.panel.on{display:block;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.ct{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;
+  padding-bottom:9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+
+label.fl{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;}
+input,select,textarea{width:100%;background:#0d0d0d;border:1px solid var(--border);
+  border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;font-family:inherit;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold2);}
+textarea{resize:vertical;min-height:50px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:480px){.g2{grid-template-columns:1fr;}}
+
+.btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+  border:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s;width:100%;justify-content:center;}
+.btn-g{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000;}
+.btn-g:hover{opacity:.9;}
+.btn-g:disabled{opacity:.4;cursor:not-allowed;}
+.btn-o{background:transparent;border:1px solid #333;color:var(--muted);}
+.btn-o:hover{border-color:var(--gold2);color:var(--gold);}
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+
+.alert{padding:10px 13px;border-radius:9px;font-size:12px;margin-bottom:12px;
+  display:flex;align-items:flex-start;gap:8px;line-height:1.6;}
+.al-r{background:#1a0000;border:1px solid #5a1a1a;color:#f5a0a0;}
+.al-g{background:#001a00;border:1px solid #1a4a1a;color:#a0f5a0;}
+.al-b{background:#00101a;border:1px solid #1a3a5a;color:var(--blue);}
+.al-y{background:#1a1200;border:1px solid #4a3000;color:var(--gold);}
+
+/* ══ 模块A：感官评价 ══ */
+.sample-nav{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.sn-btn{padding:7px 14px;border-radius:7px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;}
+.sn-btn.active{border-color:var(--gold);background:#1a1200;color:var(--gold);}
+.sn-btn.done{border-color:var(--green);background:#001500;color:var(--green);}
+.sn-btn.done::after{content:'✓';margin-left:3px;}
+
+.sample-hint{background:#1a1200;border:1px solid #3a2800;border-radius:10px;
+  padding:10px;margin-bottom:12px;text-align:center;}
+.sh-code{font-size:26px;font-weight:700;color:var(--gold);letter-spacing:4px;}
+.sh-tip{font-size:10px;color:var(--dim);margin-top:2px;}
+
+.score-item{padding:9px 0;border-bottom:1px solid #1a1a1a;}
+.score-item:last-child{border:none;}
+.score-row{display:flex;align-items:center;gap:8px;}
+.score-name{font-size:12px;font-weight:600;color:var(--text);width:72px;flex-shrink:0;line-height:1.3;}
+.score-desc{font-size:10px;color:var(--dim);margin-top:1px;}
+input[type=range]{flex:1;accent-color:var(--gold2);height:4px;cursor:pointer;}
+.score-num{font-size:15px;font-weight:700;color:var(--gold);width:24px;text-align:center;flex-shrink:0;}
+.score-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-top:2px;}
+
+.scale-ref{background:#0d0d0d;border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:10px;}
+.scale-ref-t{font-size:10px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+.scale-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;text-align:center;}
+.sc-n{font-size:13px;font-weight:700;}
+.sc-l{font-size:9px;color:var(--muted);}
+
+.buy-opts{display:flex;gap:8px;margin-top:6px;}
+.buy-btn{flex:1;padding:10px 6px;border-radius:9px;border:2px solid var(--border);
+  background:var(--bg3);cursor:pointer;text-align:center;transition:all .2s;}
+.buy-emoji{font-size:24px;display:block;margin-bottom:3px;}
+.buy-label{font-size:11px;font-weight:600;color:var(--muted);}
+.buy-btn.sel-yes{border-color:var(--green);background:#001500;}
+.buy-btn.sel-yes .buy-label{color:var(--green);}
+.buy-btn.sel-maybe{border-color:var(--gold);background:#1a1200;}
+.buy-btn.sel-maybe .buy-label{color:var(--gold);}
+.buy-btn.sel-no{border-color:var(--red);background:#1a0000;}
+.buy-btn.sel-no .buy-label{color:var(--red);}
+
+.health-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.h-opt{padding:9px 11px;border-radius:8px;border:1px solid var(--border);
+  background:var(--bg3);cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);}
+.h-opt.sel-ok{border-color:var(--green);background:#001a00;color:var(--green);}
+.h-opt.sel-warn{border-color:#f5a020;background:#1a0f00;color:#f5a020;}
+.h-opt.sel-bad{border-color:var(--red);background:#1a0000;color:var(--red);}
+
+.notice-list{display:flex;flex-direction:column;gap:7px;}
+.notice-item{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;
+  border-radius:8px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;}
+.notice-item.ck{border-color:var(--green);background:#001500;}
+.notice-item input[type=checkbox]{accent-color:var(--green);width:15px;height:15px;flex-shrink:0;margin-top:1px;}
+.notice-text{font-size:11px;color:#ccc;line-height:1.6;}
+.notice-text strong{color:var(--gold);display:block;margin-bottom:1px;}
+
+.done-wrap{text-align:center;padding:32px 16px;}
+.done-icon{font-size:56px;margin-bottom:12px;}
+.done-title{font-size:20px;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.done-sub{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:18px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center;}
+.stat-n{font-size:22px;font-weight:700;color:var(--gold);}
+.stat-l{font-size:10px;color:var(--dim);margin-top:2px;}
+
+.save-bar{padding:9px;border-radius:7px;font-size:11px;margin-top:8px;display:none;text-align:center;}
+.sv-ok{background:#001500;border:1px solid #1a5a1a;color:var(--green);}
+.sv-er{background:#1a0000;border:1px solid #5a1a1a;color:var(--red);}
+
+/* ══ 模块B：电子舌AI ══ */
+.cw{max-width:300px;margin:0 auto;}
+.legend{display:flex;justify-content:center;gap:14px;margin-top:6px;font-size:10px;}
+.ldot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle;}
+.mm{background:#1a1000;border:1px solid #3a2200;border-radius:7px;padding:10px 12px;margin-bottom:7px;cursor:pointer;}
+.mm:hover{border-color:var(--gold2);}
+.mm-t{font-size:12px;font-weight:600;color:#f5a020;}
+.mm-d{font-size:11px;color:var(--muted);margin-top:3px;}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.chip{padding:4px 10px;border-radius:12px;border:1px solid var(--border);
+  background:var(--bg3);color:var(--muted);font-size:11px;cursor:pointer;}
+.chip:hover,.chip.sel{border-color:var(--gold2);color:var(--gold);background:#1f1500;}
+.ai-box{background:#0d1500;border:1px solid #1a3000;border-radius:10px;padding:14px;margin-top:10px;display:none;}
+.ai-box.on{display:block;}
+.ai-hdr{font-size:10px;color:#5a8a20;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:4px;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-t{font-size:12px;line-height:1.85;color:#d0d0d0;white-space:pre-wrap;}
+.ev-wrap{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:none;}
+.ev-opts{display:flex;flex-direction:column;gap:5px;margin:7px 0 8px;}
+.ev-opt{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;
+  border-radius:7px;border:1px solid var(--border);cursor:pointer;}
+.ev-opt input{accent-color:var(--gold2);margin-top:2px;flex-shrink:0;}
+.ev-opt span{font-size:12px;color:#bbb;}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;}
+.sf .hint{font-size:10px;color:var(--dim);margin-top:2px;}
+.srow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1a1a;}
+.srow:last-child{border:none;}
+.sname{font-size:12px;color:#ccc;width:60px;flex-shrink:0;}
+.sval{font-size:13px;font-weight:700;color:var(--gold);width:22px;text-align:right;}
+.kb-item{border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:7px;}
+.kb-h{padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;background:var(--bg1);}
+.kb-ht{font-size:12px;font-weight:700;color:var(--gold);}
+.kb-tag{font-size:9px;padding:2px 7px;border-radius:8px;background:#1a3000;color:var(--green);}
+.kb-b{padding:12px;font-size:12px;line-height:1.85;color:#ccc;display:none;
+  white-space:pre-wrap;background:#0d0d0d;border-top:1px solid var(--border);}
+.kb-src{font-size:10px;color:var(--dim);margin-top:6px;padding-top:5px;border-top:1px solid #1a1a1a;}
+
+/* ══ 教师端 ══ */
+.t-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.t-stat{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.t-stat-n{font-size:22px;font-weight:700;}
+.t-stat-l{font-size:10px;color:var(--dim);margin-top:2px;}
+.rec{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;}
+.rec-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:6px;}
+.rec-q{font-size:11px;font-weight:600;color:var(--gold);flex:1;}
+.badge{font-size:10px;padding:2px 7px;border-radius:8px;flex-shrink:0;}
+.bc{background:#0d2a00;color:var(--green);}
+.bp{background:#2a1a00;color:#f5a020;}
+.bw{background:#2a0000;color:#e05a5a;}
+
+input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     主入口
+══════════════════════════════ -->
+<div id="home">
+  <div class="home-logo">🍜</div>
+  <div class="home-title">食品感知AI研究平台</div>
+  <div class="home-sub">莆田学院 · 食品无损检测技术 · 产学研一体</div>
+
+  <div class="module-grid">
+    <div class="mod-card mod-sensory" onclick="openApp('sensory')">
+      <div class="mod-icon">📋</div>
+      <div class="mod-text">
+        <div class="mod-name">盲测感官评价</div>
+        <div class="mod-desc">品尝样品 · 打分评价 · 购买意愿<br>竞品分析 / 配方验证实验专用</div>
+      </div>
+    </div>
+    <div class="mod-card mod-etongue" onclick="openApp('etongue')">
+      <div class="mod-icon">👅</div>
+      <div class="mod-text">
+        <div class="mod-name">电子舌AI教学</div>
+        <div class="mod-desc">录入传感器数据 · AI解释 · 批判性评价<br>电子舌实验课专用</div>
+      </div>
+    </div>
+    <div class="mod-card mod-elder" onclick="openApp('elder')">
+      <div class="mod-icon">👴</div>
+      <div class="mod-text">
+        <div class="mod-name">长辈品尝评价</div>
+        <div class="mod-desc">大字体 · 表情评分 · 简单易用<br>养老院数据采集专用</div>
+      </div>
+    </div>
+    <div class="mod-card mod-teacher" onclick="openApp('teacher')">
+      <div class="mod-icon">📊</div>
+      <div class="mod-text">
+        <div class="mod-name">教师数据中心</div>
+        <div class="mod-desc">查看全班数据 · 导出CSV · 生成报告<br>需要密码</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-footer">版本 1.0 · 数据实时同步到教师电脑</div>
+</div>
+
+<!-- ══════════════════════════════
+     模块A：盲测感官评价
+══════════════════════════════ -->
+<div class="app" id="appSensory">
+  <div class="hdr">
+    <div class="hdr-icon">📋</div>
+    <div><h1>盲测感官评价</h1><p>莆田学院食品感知研究平台</p></div>
+    <div class="hdr-badge" id="weekTag">第一周</div>
+    <button class="hdr-back" onclick="backHome()" style="margin-left:8px;">⌂</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="sgo(0)" id="st0"><span class="tn">1</span>填写信息</button>
+    <button class="tab" onclick="sgo(1)" id="st1"><span class="tn">2</span>品尝评分</button>
+    <button class="tab" onclick="sgo(2)" id="st2"><span class="tn">3</span>完成</button>
+  </div>
+  <div class="main">
+
+    <!-- 步骤1：信息+注意事项 -->
+    <div class="panel on" id="ss0">
+      <div class="alert al-y">
+        <span>📋</span>
+        <div>今天品尝的样品<strong style="color:var(--gold)">只有编号，没有品牌</strong>，请完全凭感受评分，不要猜品牌，不要和同学交流评分。</div>
+      </div>
+      <div class="card">
+        <div class="ct">👤 基本信息</div>
+        <div class="g2" style="margin-bottom:10px;">
+          <div><label class="fl">学号 *</label><input id="s_id" placeholder="请输入学号"></div>
+          <div><label class="fl">姓名（匿名处理）*</label><input id="s_name" placeholder="仅用于签到"></div>
+        </div>
+        <div class="g2">
+          <div><label class="fl">性别</label>
+            <select id="s_gender"><option value="">选择</option><option>男</option><option>女</option></select></div>
+          <div><label class="fl">年龄段</label>
+            <select id="s_age"><option value="">选择</option>
+              <option value="18-20">18-20岁</option><option value="21-23">21-23岁</option>
+              <option value="24+">24岁以上</option></select></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">🏥 品尝前健康状态 *</div>
+        <div class="alert al-b" style="margin-bottom:10px;">
+          <span>ℹ️</span><div>如实填写不影响成绩，但影响数据可靠性。有特殊状态的数据会被单独标记分析。</div>
+        </div>
+        <div class="health-opts" id="s_healthOpts">
+          <div class="h-opt" onclick="sSelHealth(this,'good','sel-ok')"><span>😊</span><div><div style="font-size:12px;font-weight:600;">状态良好</div><div style="font-size:10px;margin-top:1px;">正常，无不适</div></div></div>
+          <div class="h-opt" onclick="sSelHealth(this,'cold','sel-warn')"><span>🤧</span><div><div style="font-size:12px;font-weight:600;">感冒/鼻塞</div><div style="font-size:10px;margin-top:1px;">嗅觉可能受影响</div></div></div>
+          <div class="h-opt" onclick="sSelHealth(this,'ate','sel-warn')"><span>🍽️</span><div><div style="font-size:12px;font-weight:600;">刚吃完东西</div><div style="font-size:10px;margin-top:1px;">30分钟内进食</div></div></div>
+          <div class="h-opt" onclick="sSelHealth(this,'other','sel-bad')"><span>😷</span><div><div style="font-size:12px;font-weight:600;">其他不适</div><div style="font-size:10px;margin-top:1px;">口腔/味觉异常</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">⚠️ 注意事项确认（逐条勾选）</div>
+        <div class="notice-list" id="s_notices">
+          <label class="notice-item" onclick="sCheckNotice(this)"><input type="checkbox" class="ncb">
+            <div class="notice-text"><strong>🚨 过敏原</strong>样品含海带、大豆、小麦。对<span style="color:var(--red)">海产品/大豆/小麦过敏</span>者请立即告知教师，不要品尝。</div></label>
+          <label class="notice-item" onclick="sCheckNotice(this)"><input type="checkbox" class="ncb">
+            <div class="notice-text"><strong>💧 漱口规则</strong>每个样品品尝后用清水漱口，等30秒再品尝下一个，避免味道干扰。</div></label>
+          <label class="notice-item" onclick="sCheckNotice(this)"><input type="checkbox" class="ncb">
+            <div class="notice-text"><strong>🤐 盲测规则</strong>不要猜品牌，不要和同学交流评分，独立完成。真实感受才有研究价值。</div></label>
+          <label class="notice-item" onclick="sCheckNotice(this)"><input type="checkbox" class="ncb">
+            <div class="notice-text"><strong>📊 认真评价</strong>每项认真思考再填。系统会识别规律性乱填的数据并剔除。</div></label>
+          <label class="notice-item" onclick="sCheckNotice(this)"><input type="checkbox" class="ncb">
+            <div class="notice-text"><strong>🔒 数据用途</strong>评价数据用于食品企业配方改进研究，姓名脱敏处理，不对外公开。</div></label>
+        </div>
+      </div>
+      <button class="btn btn-g" onclick="sStartEval()" id="s_startBtn" disabled>✓ 已了解，开始品尝评价</button>
+      <div id="s_startErr" class="alert al-r" style="display:none;margin-top:8px;"></div>
+    </div>
+
+    <!-- 步骤2：评分 -->
+    <div class="panel" id="ss1">
+      <div class="sample-nav" id="s_nav"></div>
+      <div class="sample-hint">
+        <div class="sh-code" id="s_code">S-01</div>
+        <div class="sh-tip">请品尝标有此编号的样品后填写评分</div>
+      </div>
+      <div class="alert al-b" id="s_rinse" style="display:none;"><span>💧</span><div>请先用清水漱口，等30秒再品尝此样品</div></div>
+
+      <div class="scale-ref">
+        <div class="scale-ref-t">📖 评分参考</div>
+        <div class="scale-grid">
+          <div><div class="sc-n" style="color:var(--red)">1-2</div><div class="sc-l">极弱/极差</div></div>
+          <div><div class="sc-n" style="color:#f5a020">3-4</div><div class="sc-l">偏弱/偏差</div></div>
+          <div><div class="sc-n" style="color:var(--gold)">5</div><div class="sc-l">中等/刚好</div></div>
+          <div><div class="sc-n" style="color:#a0c850">6-7</div><div class="sc-l">偏好</div></div>
+          <div><div class="sc-n" style="color:var(--green)">8-9</div><div class="sc-l">极好</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">📊 感官评分</div>
+        <div style="font-size:10px;color:var(--gold);font-weight:700;margin-bottom:7px;letter-spacing:1px;">▍风味</div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">鲜味强度</div><div class="score-desc">感受到的鲜美程度</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_umami" oninput="sUpd('umami',this.value)"><div class="score-num" id="sv_umami">5</div></div>
+          <div class="score-labels"><span>1=完全感受不到</span><span>9=鲜味极强</span></div></div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">咸淡程度</div><div class="score-desc">5=刚好合适</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_salt" oninput="sUpd('salt',this.value)"><div class="score-num" id="sv_salt">5</div></div>
+          <div class="score-labels"><span>1=太淡</span><span>5=刚好</span><span>9=太咸</span></div></div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">辣味强度</div><div class="score-desc">感受到的辣度</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_spicy" oninput="sUpd('spicy',this.value)"><div class="score-num" id="sv_spicy">5</div></div>
+          <div class="score-labels"><span>1=完全不辣</span><span>9=非常辣</span></div></div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">酸味强度</div><div class="score-desc">感受到的酸度</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_sour" oninput="sUpd('sour',this.value)"><div class="score-num" id="sv_sour">5</div></div>
+          <div class="score-labels"><span>1=完全不酸</span><span>9=非常酸</span></div></div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">回味/后味</div><div class="score-desc">吞咽后的口腔感受</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_after" oninput="sUpd('after',this.value)"><div class="score-num" id="sv_after">5</div></div>
+          <div class="score-labels"><span>1=差/有异味</span><span>9=好/清爽</span></div></div>
+        <div style="font-size:10px;color:var(--gold);font-weight:700;margin:12px 0 7px;letter-spacing:1px;">▍质构</div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">软硬程度</div><div class="score-desc">5=软硬合适</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_texture" oninput="sUpd('texture',this.value)"><div class="score-num" id="sv_texture">5</div></div>
+          <div class="score-labels"><span>1=太软/烂</span><span>5=刚好</span><span>9=太硬/韧</span></div></div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">咀嚼感</div><div class="score-desc">咀嚼时的愉悦程度</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_chew" oninput="sUpd('chew',this.value)"><div class="score-num" id="sv_chew">5</div></div>
+          <div class="score-labels"><span>1=很差（粘牙/散）</span><span>9=很好（弹爽）</span></div></div>
+        <div style="font-size:10px;color:var(--gold);font-weight:700;margin:12px 0 7px;letter-spacing:1px;">▍综合</div>
+        <div class="score-item">
+          <div class="score-row"><div><div class="score-name">总体接受度</div><div class="score-desc">综合所有感受</div></div>
+            <input type="range" min="1" max="9" value="5" id="sc_overall" oninput="sUpd('overall',this.value)"><div class="score-num" id="sv_overall">5</div></div>
+          <div class="score-labels"><span>1=极不喜欢</span><span>9=非常喜欢</span></div></div>
+
+        <div style="margin-top:12px;">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">购买意愿</div>
+          <div class="buy-opts" id="s_buyOpts">
+            <button class="buy-btn" onclick="sBuy(this,'yes')"><span class="buy-emoji">🛒</span><span class="buy-label">会买</span></button>
+            <button class="buy-btn" onclick="sBuy(this,'maybe')"><span class="buy-emoji">🤔</span><span class="buy-label">考虑</span></button>
+            <button class="buy-btn" onclick="sBuy(this,'no')"><span class="buy-emoji">❌</span><span class="buy-label">不买</span></button>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <label class="fl">合理价格</label>
+          <select id="sc_price"><option value="">请选择</option>
+            <option value="<5">5元以下/包</option><option value="5-10">5-10元/包</option>
+            <option value="10-20">10-20元/包</option><option value=">20">20元以上/包</option></select>
+        </div>
+
+        <!-- 第二周对比题 -->
+        <div id="s_compareWrap" style="display:none;margin-top:12px;background:#0d1a00;border:1px solid #1a4a00;border-radius:9px;padding:11px;">
+          <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:7px;">🔄 与上周同编号样品对比</div>
+          <div style="display:flex;flex-direction:column;gap:5px;" id="s_compareOpts">
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#ccc;"><input type="radio" name="sc_cmp" value="better" style="accent-color:var(--gold2);"> 😊 这次更好，有明显改进</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#ccc;"><input type="radio" name="sc_cmp" value="same"> 😐 差不多，没有明显变化</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#ccc;"><input type="radio" name="sc_cmp" value="worse"> 😞 这次更差，不如上周</label>
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#ccc;"><input type="radio" name="sc_cmp" value="na"> ❓ 记不清上周了</label>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="fl">一两句话描述这个样品（最有价值的信息）</label>
+          <textarea id="sc_comment" placeholder="例：鲜味足但偏咸，回味有轻微腥气，口感偏软..."></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-o" onclick="sPrev()" id="s_prev" style="flex:0 0 72px;">← 上一个</button>
+        <button class="btn btn-g" onclick="sNext()" id="s_next">提交，继续下一个 →</button>
+      </div>
+      <div class="save-bar" id="s_saveSt"></div>
+    </div>
+
+    <!-- 步骤3：完成 -->
+    <div class="panel" id="ss2">
+      <div class="done-wrap">
+        <div class="done-icon">🎉</div>
+        <div class="done-title">评价完成！</div>
+        <div class="done-sub">感谢认真参与盲测实验<br>您的数据对配方改进非常重要<br><span style="color:var(--gold)">稍后教师会公布样品信息和分析结果</span></div>
+        <div class="stats-row" id="s_doneStats"></div>
+        <button class="btn btn-o" onclick="sShowSummary()" style="width:auto;padding:9px 20px;">📊 查看我的评分汇总</button>
+      </div>
+      <div id="s_summary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     模块B：电子舌AI教学
+══════════════════════════════ -->
+<div class="app" id="appEtongue">
+  <div class="hdr">
+    <div class="hdr-icon">👅</div>
+    <div><h1>电子舌AI教学</h1><p>莆田学院食品无损检测</p></div>
+    <button class="hdr-back" onclick="backHome()">⌂ 返回</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="ego(0)" id="et0"><span class="tn">1</span>感官评价</button>
+    <button class="tab" onclick="ego(1)" id="et1"><span class="tn">2</span>仪器数据</button>
+    <button class="tab" onclick="ego(2)" id="et2"><span class="tn">3</span>对比图</button>
+    <button class="tab" onclick="ego(3)" id="et3"><span class="tn">4</span>AI问答</button>
+    <button class="tab" onclick="ego(4)" id="et4"><span class="tn">5</span>知识库</button>
+    <button class="tab" onclick="ego(5)" id="et5"><span class="tn">6</span>记录</button>
+  </div>
+  <div class="main">
+    <div class="panel on" id="ep0">
+      <div class="alert al-b">ⓘ 先用感官打分，再看仪器数据，对比两者差异</div>
+      <div class="card">
+        <div class="ct">📋 样品信息</div>
+        <div class="g2">
+          <div><label class="fl">样品名称</label><input id="e_sName" placeholder="例：鱼丸4℃3天"></div>
+          <div><label class="fl">学号</label><input id="e_stuId" placeholder="您的学号"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">👃 人工感官（1=极弱，9=极强）</div>
+        <div id="e_sliders"></div>
+        <button class="btn btn-g" onclick="ego(1)" style="margin-top:12px;">完成感官评价 →</button>
+      </div>
+    </div>
+    <div class="panel" id="ep1">
+      <div class="alert al-y">⚠ 输入Insent电子舌各传感器数值（正负均正常）</div>
+      <div class="card"><div class="ct">📡 Insent传感器响应值</div><div class="sg" id="e_sensors"></div></div>
+      <div class="btn-row">
+        <button class="btn btn-o" onclick="ego(0)" style="flex:0 0 72px;">← 返回</button>
+        <button class="btn btn-g" onclick="eDoCompare()">生成对比图 →</button>
+      </div>
+    </div>
+    <div class="panel" id="ep2">
+      <div class="card"><div class="ct">📊 感官 vs 电子舌 雷达图</div>
+        <div class="cw"><canvas id="e_radar" height="260"></canvas></div>
+        <div class="legend"><span><span class="ldot" style="background:var(--gold)"></span>人工感官</span><span><span class="ldot" style="background:var(--green)"></span>电子舌</span></div>
+      </div>
+      <div class="card"><div class="ct">⚠ 差异点（点击带入AI提问）</div><div id="e_mmList"></div></div>
+      <div class="btn-row"><button class="btn btn-o" onclick="ego(1)" style="flex:0 0 72px;">← 返回</button><button class="btn btn-g" onclick="ego(3)">去问AI →</button></div>
+    </div>
+    <div class="panel" id="ep3">
+      <div class="card">
+        <div class="ct">❓ AI问答</div>
+        <div class="alert al-y">⚠ AI可能说错——请对照知识库验证</div>
+        <div class="chips" id="e_chips"></div>
+        <div style="margin-bottom:10px;"><label class="fl">自由输入</label><textarea id="e_qIn" placeholder="例：为什么感官和电子舌不一致？"></textarea></div>
+        <button class="btn btn-g" onclick="eAskAI()" id="e_askBtn">🤖 向AI提问</button>
+      </div>
+      <div class="ai-box" id="e_aiBox">
+        <div class="ai-hdr"><div class="ai-dot" id="e_aiDot"></div>AI回答（基于知识库）</div>
+        <div class="ai-t" id="e_aiText"></div>
+        <div class="ev-wrap" id="e_evWrap">
+          <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px;">📝 批判性评价（必填）</div>
+          <div class="ev-opts">
+            <label class="ev-opt"><input type="radio" name="ev" value="correct"><span>✅ AI正确，我理解了</span></label>
+            <label class="ev-opt"><input type="radio" name="ev" value="partial"><span>⚠️ 部分正确，有遗漏</span></label>
+            <label class="ev-opt"><input type="radio" name="ev" value="wrong"><span>❌ 有错误，我找到了</span></label>
+          </div>
+          <textarea id="e_evCmt" placeholder="AI答对/漏/错了什么？" style="margin-bottom:8px;"></textarea>
+          <button class="btn btn-g" onclick="eSubmit()">✓ 提交保存</button>
+          <div class="save-bar" id="e_saveSt"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="ep4">
+      <div class="alert al-g">✓ 对照AI回答与标准解释，找出差异</div>
+      <div id="e_kbList"></div>
+    </div>
+    <div class="panel" id="ep5">
+      <div class="stats-row">
+        <div class="stat"><div class="stat-n" id="e_st0">0</div><div class="stat-l">总提问</div></div>
+        <div class="stat"><div class="stat-n" id="e_st1" style="color:var(--red)">0</div><div class="stat-l">发现错误</div></div>
+        <div class="stat"><div class="stat-n" id="e_st2" style="color:#f5a020">0</div><div class="stat-l">发现遗漏</div></div>
+        <div class="stat"><div class="stat-n" id="e_st3" style="color:var(--green)">0</div><div class="stat-l">答对</div></div>
+      </div>
+      <div class="card"><div class="ct">📋 我的记录</div><div id="e_recList"></div></div>
+      <button class="btn btn-o" onclick="eExport()">📥 导出记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     模块C：长辈品尝（简化版）
+══════════════════════════════ -->
+<div class="app" id="appElder" style="background:#fff8f0;">
+  <div style="background:#fff3e6;border-bottom:3px solid #c8600a;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;">
+    <div style="width:44px;height:44px;background:#c8600a;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">🍜</div>
+    <div><div style="font-size:20px;font-weight:700;color:#c8600a;">品尝评价</div><div style="font-size:12px;color:#888;">莆田学院食品研究</div></div>
+    <button onclick="backHome()" style="margin-left:auto;padding:8px 16px;border-radius:8px;border:2px solid #c8600a;background:none;color:#c8600a;font-size:13px;cursor:pointer;font-weight:700;">返回</button>
+  </div>
+  <div style="padding:20px;max-width:500px;margin:0 auto;" id="elderContent">
+    <!-- 老人端内容由JS渲染 -->
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     模块D：教师端
+══════════════════════════════ -->
+<div class="app" id="appTeacher">
+  <div class="hdr">
+    <div class="hdr-icon" style="background:linear-gradient(135deg,#1a7a1a,var(--green));">📊</div>
+    <div><h1>教师数据中心</h1><p>查看全部实验数据</p></div>
+    <button class="hdr-back" onclick="backHome()">⌂ 返回</button>
+  </div>
+  <div class="main">
+    <div id="t_lock" class="card">
+      <div class="ct">🔑 验证</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="password" id="t_pwd" placeholder="教师密码" style="flex:1;max-width:200px;">
+        <button class="btn btn-g" onclick="tUnlock()" style="width:auto;padding:10px 18px;">验证</button>
+      </div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px;">默认密码：putian2024</div>
+    </div>
+    <div id="t_dash" style="display:none;">
+      <div class="t-stats" id="t_stats"></div>
+      <div class="card">
+        <div class="ct">📊 样品对比（全班平均分）</div>
+        <canvas id="t_chart" height="200"></canvas>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-g" onclick="tRefresh()">🔄 刷新</button>
+        <button class="btn btn-o" onclick="tExport()">📥 导出CSV</button>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="ct">📋 最新记录</div>
+        <div id="t_recs"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════ 配置 ════════════
+const WEEK = 1;           // 1=第一周 2=第二周
+const TEACHER_PWD = 'putian2024';
+const SERVER_URL = 'http://192.168.1.100:8765'; // ← 改成您电脑IP
+
+const SAMPLES_W1 = ['S-01','S-02','S-03','S-04'];
+const SAMPLES_W2 = ['S-01','S-02','S-03','S-04','S-05'];
+const SAMPLES = WEEK===1 ? SAMPLES_W1 : SAMPLES_W2;
+
+// ════════════ 知识库 ════════════
+const KB=[
+  {title:'为什么电子舌数值是负数？',tag:'基础原理',
+   content:`Insent电子舌使用参考电位法：\n输出值 = 样品电位 − 标准液电位\n• 正值 → 高于标准液\n• 负值 → 低于标准液（不代表无味！）\n⚠ AI常见错误：说"负值=无法检测"——这是错的。`,
+   source:'Insent操作手册Ch.3'},
+  {title:'各传感器含义',tag:'传感器',
+   content:`UNS 鲜味：谷氨酸、肌苷酸\nBT  苦味：咖啡因、苦味酸\nCA  酸味：氢离子浓度（pH）\nAHS 涩味：单宁、多酚\nPKS 后苦漂移：苦味残留\nANS 后鲜漂移：鲜味残留`,
+   source:'Toko et al.(2013)'},
+  {title:'人感官与仪器不一致的原因',tag:'核心教学',
+   content:`人的感官受气味/温度/心理协同影响\n电子舌测标准化电化学响应\n→ 两者测的不是同一件事\n\n典型案例：\n"人感觉鲜但UNS低"\n→ 鲜味来源是IMP（UNS对IMP响应弱）\n→ 或气味增强了鲜味感知（协同效应）`,
+   source:'Rudnitskaya(2015)'},
+  {title:'海带鲜味来源',tag:'食品案例',
+   content:`海带天然谷氨酸含量极高（约1-3% dry weight）\n是味精的天然来源\n\n影响鲜味的因素：\n• 浸提温度（60-80℃最佳）\n• 浸提时间\n• 品种（真海带>裙带菜）\n• 新鲜度\n\n配方启示：\n优化浸提工艺可减少味精添加量\n电子舌UNS值可定量评估浸提效果`,
+   source:'Food Chemistry海带研究'},
+  {title:'酵母提取物替代味精',tag:'配方改革',
+   content:`酵母提取物（YE）：清洁标签替代味精\n配料表标注"酵母提取物"，消费者接受度高\n\n使用比例：\n0.3% YE ≈ 0.8% 味精的鲜味强度\n高温灭菌后鲜味留存率87%\n\n注意：\n不同品牌YE鲜味强度不同\n需要电子舌UNS值验证实际效果\n目标：改配方后UNS值与原配方差异<10%`,
+   source:'安琪酵母2025数据；行业研究'},
+];
+
+const E_SENSORS=[
+  {id:'AAE',         label:'鲜味 AAE',        hint:'谷氨酸等鲜味物质',    sk:'umami'},
+  {id:'BT0',         label:'苦味 BT0',         hint:'咖啡因、苦味酸',      sk:'bitter'},
+  {id:'CA0',         label:'酸味 CA0',         hint:'氢离子（pH相关）',    sk:'sour'},
+  {id:'AE1',         label:'涩味 AE1',         hint:'单宁等涩味物质',      sk:'astringent'},
+  {id:'C00',         label:'咸味 C00',         hint:'氯化钠等咸味物质',    sk:'salty'},
+  {id:'AftertasteB', label:'后苦回味 Aft-B',   hint:'苦味在口腔的残留',    sk:null},
+  {id:'Richness',    label:'丰富度 Richness',  hint:'鲜味丰富度/后鲜回味', sk:null},
+];
+const E_SENSORY=[
+  {id:'umami',      label:'鲜味',     sid:'AAE'},
+  {id:'bitter',     label:'苦味',     sid:'BT0'},
+  {id:'sour',       label:'酸味',     sid:'CA0'},
+  {id:'astringent', label:'涩味',     sid:'AE1'},
+  {id:'salty',      label:'咸味',     sid:'C00'},
+  {id:'overall',    label:'总体接受', sid:null},
+];
+const E_PREQ=['为什么UNS鲜味值是负数？','感官和电子舌不一致，为什么？','苦味BT和涩味AHS有什么区别？','酵母提取物能替代味精吗？','电子舌能替代人工感官评价吗？'];
+
+// ════════════ 全局状态 ════════════
+let curApp='';
+let sHealth='', sAllCk=false, sCurIdx=0;
+let sScores={}, sBuyChoice={}, sStuInfo={};
+let eSc={}, eRecords=[], eCurQ='', eCurA='', eRadar=null;
+let elderSurvey={}, elderSc={};
+let tChart=null;
+let allRecords=[];
+
+// ════════════ 入口 ════════════
+function openApp(name){
+  curApp=name;
+  document.getElementById('home').style.display='none';
+  document.querySelectorAll('.app').forEach(a=>a.style.display='none');
+  document.getElementById('app'+name.charAt(0).toUpperCase()+name.slice(1)).style.display='block';
+  if(name==='sensory') sInit();
+  if(name==='etongue') eInit();
+  if(name==='elder') elderInit();
+  if(name==='teacher'){}
+}
+function backHome(){
+  document.querySelectorAll('.app').forEach(a=>a.style.display='none');
+  document.getElementById('home').style.display='flex';
+}
+
+// ════════════ 模块A：感官评价 ════════════
+function sInit(){
+  document.getElementById('weekTag').textContent=`第${WEEK===1?'一':'二'}周`;
+  if(WEEK===2) document.getElementById('s_compareWrap').style.display='block';
+}
+function sgo(n){
+  document.querySelectorAll('#appSensory .panel').forEach((p,i)=>p.classList.toggle('on',i===n));
+  document.querySelectorAll('#appSensory .tab').forEach((t,i)=>t.classList.toggle('on',i===n));
+}
+function sSelHealth(el,val,cls){
+  document.querySelectorAll('#s_healthOpts .h-opt').forEach(e=>e.className='h-opt');
+  el.classList.add(cls); sHealth=val; sCheckReady();
+}
+function sCheckNotice(label){
+  setTimeout(()=>{
+    const all=[...document.querySelectorAll('.ncb')];
+    all.forEach((cb,i)=>{
+      document.querySelectorAll('.notice-item')[i].classList.toggle('ck',cb.checked);
+    });
+    sAllCk=all.every(cb=>cb.checked); sCheckReady();
+  },50);
+}
+function sCheckReady(){
+  const id=document.getElementById('s_id').value.trim();
+  const nm=document.getElementById('s_name').value.trim();
+  document.getElementById('s_startBtn').disabled=!(id&&nm&&sHealth&&sAllCk);
+}
+['s_id','s_name'].forEach(id=>document.getElementById(id).addEventListener('input',sCheckReady));
+function sStartEval(){
+  const id=document.getElementById('s_id').value.trim();
+  const nm=document.getElementById('s_name').value.trim();
+  if(!id||!nm){document.getElementById('s_startErr').style.display='flex';document.getElementById('s_startErr').textContent='请填写学号和姓名';return;}
+  sStuInfo={stuId:id,stuName:nm,gender:document.getElementById('s_gender').value,age:document.getElementById('s_age').value,health:sHealth,week:WEEK};
+  sCurIdx=0; sScores={}; sBuyChoice={};
+  sgo(1); sRenderNav(); sLoadSample(0);
+}
+function sRenderNav(){
+  document.getElementById('s_nav').innerHTML=SAMPLES.map((s,i)=>{
+    let c='sn-btn';
+    if(i===sCurIdx) c+=' active';
+    if(sScores[s]) c+=' done';
+    return `<button class="${c}" onclick="sJump(${i})">${s}</button>`;
+  }).join('');
+}
+function sLoadSample(idx){
+  const s=SAMPLES[idx];
+  document.getElementById('s_code').textContent=s;
+  document.getElementById('s_rinse').style.display=idx>0?'flex':'none';
+  document.getElementById('s_prev').style.opacity=idx===0?'0.3':'1';
+  const isLast=idx===SAMPLES.length-1;
+  document.getElementById('s_next').textContent=isLast?'✓ 提交全部评价':'提交，继续下一个 →';
+  const saved=sScores[s];
+  ['umami','salt','spicy','sour','after','texture','chew','overall'].forEach(d=>{
+    const v=saved?saved[d]:5;
+    const el=document.getElementById('sc_'+d);
+    if(el){el.value=v;sUpd(d,v);}
+  });
+  document.querySelectorAll('.buy-btn').forEach(b=>b.className='buy-btn');
+  if(sBuyChoice[s]){
+    const map={yes:'sel-yes',maybe:'sel-maybe',no:'sel-no'};
+    document.querySelectorAll('.buy-btn').forEach(b=>{
+      if(b.querySelector('.buy-label').textContent==={yes:'会买',maybe:'考虑',no:'不买'}[sBuyChoice[s]])
+        b.classList.add(map[sBuyChoice[s]]);
+    });
+  }
+  document.getElementById('sc_comment').value=saved?saved.comment||'':'';
+  document.getElementById('sc_price').value=saved?saved.price||'':'';
+  document.querySelectorAll('input[name=sc_cmp]').forEach(r=>r.checked=false);
+  if(saved&&saved.compare){const r=document.querySelector(`input[name=sc_cmp][value="${saved.compare}"]`);if(r)r.checked=true;}
+}
+function sUpd(d,v){document.getElementById('sv_'+d).textContent=v;}
+function sBuy(el,val){
+  document.querySelectorAll('.buy-btn').forEach(b=>b.classList.remove('sel-yes','sel-maybe','sel-no'));
+  el.classList.add({yes:'sel-yes',maybe:'sel-maybe',no:'sel-no'}[val]);
+  sBuyChoice[SAMPLES[sCurIdx]]=val;
+}
+function sJump(idx){if(!sScores[SAMPLES[sCurIdx]]&&idx!==sCurIdx){alert('请先完成当前样品的评价');return;}sCurIdx=idx;sRenderNav();sLoadSample(idx);}
+function sPrev(){if(sCurIdx===0)return;sCurIdx--;sRenderNav();sLoadSample(sCurIdx);}
+async function sNext(){
+  const s=SAMPLES[sCurIdx];
+  if(!sBuyChoice[s]){alert('请选择购买意愿');return;}
+  const d={};
+  ['umami','salt','spicy','sour','after','texture','chew','overall'].forEach(k=>{d[k]=+document.getElementById('sc_'+k).value;});
+  d.comment=document.getElementById('sc_comment').value;
+  d.price=document.getElementById('sc_price').value;
+  d.buy=sBuyChoice[s]||'';
+  if(WEEK===2){const cr=document.querySelector('input[name=sc_cmp]:checked');d.compare=cr?cr.value:'';}
+  sScores[s]=d;
+  await sSave({...sStuInfo,sample:s,...d,time:new Date().toLocaleString('zh-CN')});
+  if(sCurIdx<SAMPLES.length-1){sCurIdx++;sRenderNav();sLoadSample(sCurIdx);window.scrollTo(0,0);}
+  else{sgo(2);sRenderDone();}
+}
+function sRenderDone(){
+  document.getElementById('s_doneStats').innerHTML=`
+    <div class="stat"><div class="stat-n">${Object.keys(sScores).length}</div><div class="stat-l">已评样品</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--green)">${Object.values(sBuyChoice).filter(v=>v==='yes').length}</div><div class="stat-l">愿意购买</div></div>
+    <div class="stat"><div class="stat-n" style="color:var(--blue)">${SAMPLES.length}</div><div class="stat-l">总样品数</div></div>`;
+}
+function sShowSummary(){
+  const el=document.getElementById('s_summary');el.style.display='block';
+  const dims={umami:'鲜味',salt:'咸淡',spicy:'辣味',sour:'酸味',after:'回味',texture:'软硬',chew:'咀嚼感',overall:'总体'};
+  const bm={yes:'🛒会买',maybe:'🤔考虑',no:'❌不买','':`—`};
+  el.innerHTML=SAMPLES.map(s=>{
+    const d=sScores[s];if(!d)return'';
+    return`<div class="card"><div class="ct">📋 ${s}</div>
+      ${Object.entries(dims).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1a1a1a;font-size:11px;"><span style="color:var(--muted)">${v}</span><span style="color:var(--gold);font-weight:700">${d[k]||5}分</span></div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:11px;"><span style="color:var(--muted)">购买意愿</span><span style="color:var(--green)">${bm[sBuyChoice[s]||'']}</span></div>
+      ${d.comment?`<div style="margin-top:5px;font-size:10px;color:#666;">💬 ${d.comment}</div>`:''}
+    </div>`;}).join('');
+}
+async function sSave(data){
+  try{const k='s_recs_w'+WEEK;const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(data);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
+  const st=document.getElementById('s_saveSt');
+  try{
+    await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    st.className='save-bar sv-ok';st.textContent='✅ 已保存到教师电脑';st.style.display='block';
+    setTimeout(()=>st.style.display='none',2000);
+  }catch(e){
+    st.className='save-bar sv-er';st.textContent='⚠ 无法连接服务器，已保存本地，请告知教师';st.style.display='block';
+  }
+}
+
+// ════════════ 模块B：电子舌AI ════════════
+function eInit(){
+  E_SENSORY.forEach(d=>eSc[d.id]=5);
+  document.getElementById('e_sliders').innerHTML=E_SENSORY.map(d=>`
+    <div class="srow"><span class="sname">${d.label}</span>
+      <input type="range" min="1" max="9" value="5" id="esl_${d.id}"
+        oninput="eSc['${d.id}']=+this.value;document.getElementById('esv_${d.id}').textContent=this.value">
+      <span class="sval" id="esv_${d.id}">5</span></div>`).join('');
+  document.getElementById('e_sensors').innerHTML=E_SENSORS.map(s=>`
+    <div class="sf"><label class="fl">${s.label}</label>
+      <input type="number" step="0.01" id="esen_${s.id}" placeholder="输入数值">
+      <div class="hint">${s.hint}</div></div>`).join('');
+  document.getElementById('e_chips').innerHTML=E_PREQ.map(q=>`<span class="chip" onclick="ePickQ(this,'${q}')">${q}</span>`).join('');
+  document.getElementById('e_kbList').innerHTML=KB.map((k,i)=>`
+    <div class="kb-item"><div class="kb-h" onclick="document.getElementById('ekb${i}').style.display=document.getElementById('ekb${i}').style.display==='block'?'none':'block'">
+      <span class="kb-ht">${k.title}</span><span class="kb-tag">${k.tag}</span></div>
+      <div id="ekb${i}" class="kb-b">${k.content.replace(/\n/g,'<br>')}
+        <div class="kb-src">📚 ${k.source}</div></div></div>`).join('');
+  eLoadRecs();
+}
+function ego(n){
+  document.querySelectorAll('#appEtongue .panel').forEach((p,i)=>p.classList.toggle('on',i===n));
+  document.querySelectorAll('#appEtongue .tab').forEach((t,i)=>t.classList.toggle('on',i===n));
+}
+function eDoCompare(){
+  const sv={};E_SENSORS.forEach(s=>{sv[s.id]=parseFloat(document.getElementById('esen_'+s.id).value)||0;});
+  const sMin=-10,sMax=10,norm=v=>Math.max(0,Math.min(1,(v-sMin)/(sMax-sMin)));
+  const dims=['umami','bitter','sour','astringent'],labels=['鲜味','苦味','酸味','涩味'];
+  const hd=dims.map(d=>(eSc[d]-1)/8);
+  const sed=dims.map((_,i)=>norm(sv[E_SENSORY.find(x=>x.id===dims[i]).sid]||0));
+  const ctx=document.getElementById('e_radar').getContext('2d');
+  if(eRadar)eRadar.destroy();
+  eRadar=new Chart(ctx,{type:'radar',data:{labels,datasets:[
+    {label:'感官',data:hd,borderColor:'#f5c842',backgroundColor:'rgba(245,200,66,0.15)',pointBackgroundColor:'#f5c842',pointRadius:4,borderWidth:2},
+    {label:'电子舌',data:sed,borderColor:'#7bc32a',backgroundColor:'rgba(123,195,42,0.12)',pointBackgroundColor:'#7bc32a',pointRadius:4,borderWidth:2},
+  ]},options:{responsive:true,plugins:{legend:{display:false}},scales:{r:{min:0,max:1,ticks:{display:false},grid:{color:'#2a2a2a'},pointLabels:{color:'#ccc',font:{size:12}},angleLines:{color:'#2a2a2a'}}}}});
+  const mm=[];
+  dims.forEach((d,i)=>{
+    const diff=Math.abs(hd[i]-sed[i]);
+    if(diff>0.3){
+      const sid=E_SENSORY.find(x=>x.id===d).sid,raw=sv[sid]||0,hs=eSc[d];
+      mm.push({label:labels[i],desc:hd[i]>sed[i]?`您打${hs}分，仪器${(sed[i]*100).toFixed(0)}%（偏低）`:`仪器${(sed[i]*100).toFixed(0)}%（偏高），您打${hs}分`,
+        q:`${labels[i]}维度：感官${hs}分，${sid}值${raw.toFixed(2)}，为什么不一致？`});
+    }
+  });
+  window._sugQ=mm.map(m=>m.q);
+  document.getElementById('e_mmList').innerHTML=mm.length
+    ?mm.map(m=>`<div class="mm" onclick="document.getElementById('e_qIn').value='${m.q}';ego(3);">
+      <div class="mm-t">⚠ ${m.label}有差异</div><div class="mm-d">${m.desc}</div></div>`).join('')
+    :`<div class="alert al-g" style="margin:0">✓ 感官与仪器基本一致</div>`;
+  ego(2);
+}
+function ePickQ(el,q){document.querySelectorAll('#e_chips .chip').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('e_qIn').value=q;}
+async function eAskAI(){
+  const q=(document.getElementById('e_qIn').value||'').trim();if(!q){alert('请输入问题');return;}eCurQ=q;
+  const sName=document.getElementById('e_sName').value||'未命名';
+  const sv={};E_SENSORS.forEach(s=>{sv[s.id]=parseFloat(document.getElementById('esen_'+s.id).value)||null;});
+  const btn=document.getElementById('e_askBtn');btn.disabled=true;btn.textContent='⏳ 思考中...';
+  const box=document.getElementById('e_aiBox'),txt=document.getElementById('e_aiText'),ew=document.getElementById('e_evWrap');
+  box.classList.add('on');ew.style.display='none';document.getElementById('e_aiDot').style.display='block';txt.textContent='查阅知识库中...';
+  const kbText=KB.map(k=>`【${k.title}】\n${k.content}`).join('\n\n---\n\n');
+  const sys=`你是食品感官科学专家，负责Insent电子舌和食品配方改革教学。\n知识库：\n${kbText}\n要求：中文；先直接回答；再原理解释；最后说明不确定之处。`;
+  const usr=`样品：${sName}\n感官：${E_SENSORY.map(d=>`${d.label}:${eSc[d.id]}分`).join('，')}\n电子舌：${E_SENSORS.map(s=>`${s.label}:${sv[s.id]!==null?sv[s.id]:'未输入'}`).join('，')}\n问题：${q}`;
+  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,system:sys,messages:[{role:'user',content:usr}]})});const data=await res.json();eCurA=data.content?.[0]?.text||'未能获取回答';}catch(e){eCurA='⚠ 网络错误：'+e.message;}
+  document.getElementById('e_aiDot').style.display='none';txt.textContent=eCurA;ew.style.display='block';
+  document.querySelectorAll('input[name=ev]').forEach(r=>r.checked=false);document.getElementById('e_evCmt').value='';
+  document.getElementById('e_saveSt').style.display='none';btn.disabled=false;btn.textContent='🤖 向AI提问';
+}
+async function eSubmit(){
+  const ev=document.querySelector('input[name=ev]:checked')?.value;if(!ev){alert('请选择评价');return;}
+  const rec={type:'etongue',id:Date.now(),time:new Date().toLocaleString('zh-CN'),stuId:document.getElementById('e_stuId').value||'匿名',sample:document.getElementById('e_sName').value||'未命名',q:eCurQ,a:eCurA,ev,comment:document.getElementById('e_evCmt').value};
+  eRecords.unshift(rec);
+  try{localStorage.setItem('e_recs',JSON.stringify(eRecords));}catch(e){}
+  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});}catch(e){}
+  const st=document.getElementById('e_saveSt');st.className='save-bar sv-ok';st.textContent='✅ 已保存';st.style.display='block';
+  eRenderRecs();eUpdateStats();setTimeout(()=>ego(5),1200);
+}
+function eLoadRecs(){try{const s=localStorage.getItem('e_recs');if(s)eRecords=JSON.parse(s);}catch(e){}eRenderRecs();eUpdateStats();}
+function eRenderRecs(){
+  const el=document.getElementById('e_recList');
+  if(!eRecords.length){el.innerHTML='<p style="color:var(--dim);font-size:12px;text-align:center;padding:14px;">暂无记录</p>';return;}
+  const lm={correct:'正确',partial:'部分',wrong:'错误'},cm={correct:'bc',partial:'bp',wrong:'bw'};
+  el.innerHTML=eRecords.map(r=>`<div class="rec"><div class="rec-top"><span class="rec-q">Q: ${r.q}</span><span class="badge ${cm[r.ev]}">${lm[r.ev]}</span></div>
+    <div style="font-size:10px;color:var(--dim);margin-bottom:3px;">${r.sample}·${r.time}</div>
+    ${r.comment?`<div style="font-size:10px;color:var(--muted)">💬 ${r.comment}</div>`:''}</div>`).join('');
+}
+function eUpdateStats(){
+  document.getElementById('e_st0').textContent=eRecords.length;
+  document.getElementById('e_st1').textContent=eRecords.filter(r=>r.ev==='wrong').length;
+  document.getElementById('e_st2').textContent=eRecords.filter(r=>r.ev==='partial').length;
+  document.getElementById('e_st3').textContent=eRecords.filter(r=>r.ev==='correct').length;
+}
+function eExport(){let t=`电子舌AI记录\n学号：${document.getElementById('e_stuId').value||'未知'}\n${'='.repeat(40)}\n\n`;eRecords.forEach((r,i)=>{t+=`【${i+1}】${r.time}\n问题：${r.q}\nAI：${r.a}\n评价：${r.ev}\n评论：${r.comment||'无'}\n${'-'.repeat(30)}\n\n`;});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/plain;charset=utf-8'}));a.download=`AI记录.txt`;a.click();}
+
+// ════════════ 模块C：老人端 ════════════
+function elderInit(){
+  elderSurvey={};elderSc={};
+  renderElder(0);
+}
+const ELDER_STEPS=[
+  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
+    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">👋 您好！感谢参与品尝</div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">您的编号（工作人员填写）</label>
+      <input id="el_id" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="请输入编号"></div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">您的年龄</label>
+      <select id="el_age" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;">
+        <option value="">请选择</option><option value="60-65">60-65岁</option><option value="65-70">65-70岁</option>
+        <option value="70-75">70-75岁</option><option value="75-80">75-80岁</option><option value="80+">80岁以上</option></select></div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">今天身体状况</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button onclick="elderSelHealth(this,'好')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😊 很好</button>
+        <button onclick="elderSelHealth(this,'一般')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😐 一般</button>
+        <button onclick="elderSelHealth(this,'不太好')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😕 不太好</button>
+        <button onclick="elderSelHealth(this,'感冒')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">🤧 感冒</button>
+      </div></div>
+    <button onclick="elderNext(0)" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>
+  </div>`,
+  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
+    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🍜 今天品尝的食品</div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">食品名称</label>
+      <input id="el_food" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="例：海带"></div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">样品编号</label>
+      <input id="el_code" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="例：S-01"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="renderElder(0)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>
+      <button onclick="elderNext(1)" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">下一步 →</button>
+    </div></div>`,
+  ()=>elderEmojiStep('overall','这个食品<span style="color:#c8600a">总体</span>怎么样？',2),
+  ()=>elderEmojiStep('taste','这个食品的<span style="color:#c8600a">味道</span>怎么样？',3),
+  ()=>elderEmojiStep('texture','这个食品吃起来<span style="color:#c8600a">软硬</span>怎么样？',4),
+  ()=>elderEmojiStep('saltiness','这个食品的<span style="color:#c8600a">咸淡</span>怎么样？',5),
+  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
+    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🛒 如果在超市看到这个食品，您会买吗？</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+      <button onclick="elderBuy(this,'yes')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">🛒<br>会买</button>
+      <button onclick="elderBuy(this,'maybe')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">🤔<br>考虑</button>
+      <button onclick="elderBuy(this,'no')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">❌<br>不买</button>
+    </div>
+    <div style="margin-bottom:14px;"><label style="display:block;font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:6px;">有什么意见？（可不填）</label>
+      <textarea id="el_comment" style="border:2px solid #ddd;border-radius:10px;padding:12px;font-size:16px;width:100%;min-height:60px;" placeholder="例：太咸了 太硬了"></textarea></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="renderElder(5)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>
+      <button onclick="elderSubmit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">✓ 完成品尝</button>
+    </div></div>`,
+  ()=>`<div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid #f0c080;border-radius:16px;padding:24px;text-align:center;">
+    <div style="font-size:64px;margin-bottom:12px;" id="el_reportEmoji">🎉</div>
+    <div style="font-size:24px;font-weight:700;color:#c8600a;margin-bottom:10px;">感谢您的参与！</div>
+    <div style="font-size:17px;color:#1a1a1a;line-height:1.8;margin-bottom:16px;" id="el_reportText"></div>
+    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #f0d0b0;text-align:left;" id="el_reportTips"></div>
+    <button onclick="elderInit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;margin-top:16px;">继续下一位品尝者</button>
+  </div>`,
+];
+function elderEmojiStep(dim,question,nextStep){
+  const OPTS=[{v:'happy',icon:'😊',label:'很好'},{v:'ok',icon:'😐',label:'一般'},{v:'sad',icon:'😞',label:'不好'}];
+  return`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
+    <div style="font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:18px;line-height:1.5;">${question}</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:18px;">
+      ${OPTS.map(o=>`<button onclick="elderRate('${dim}','${o.v}',${nextStep},this)"
+        style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">
+        <span style="font-size:44px;display:block;margin-bottom:6px;">${o.icon}</span>
+        <span style="font-size:16px;font-weight:700;color:#1a1a1a;">${o.label}</span>
+      </button>`).join('')}
+    </div>
+    <button onclick="renderElder(${nextStep-1})" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;width:100%;cursor:pointer;">← 上一步</button>
+  </div>`;
+}
+function renderElder(step){document.getElementById('elderContent').innerHTML=ELDER_STEPS[step]();}
+function elderSelHealth(el,val){document.querySelectorAll('#elderContent button').forEach(b=>{if(['好','一般','不太好','感冒'].some(v=>b.textContent.includes(v)))b.style.border='2px solid #ddd';});el.style.border='3px solid #c8600a';elderSurvey.health=val;}
+function elderNext(step){
+  if(step===0){
+    elderSurvey.id=document.getElementById('el_id')?.value||'';
+    elderSurvey.age=document.getElementById('el_age')?.value||'';
+  }
+  if(step===1){
+    elderSurvey.food=document.getElementById('el_food')?.value||'';
+    elderSurvey.code=document.getElementById('el_code')?.value||'';
+  }
+  renderElder(step+1);
+}
+function elderRate(dim,val,next,el){
+  el.parentElement.querySelectorAll('button').forEach(b=>b.style.border='3px solid #ddd');
+  el.style.border='3px solid #c8600a';elderSc[dim]=val;
+  setTimeout(()=>renderElder(next),400);
+}
+function elderBuy(el,val){
+  document.querySelectorAll('#elderContent button').forEach(b=>{if(['会买','考虑','不买'].some(v=>b.textContent.includes(v)))b.style.border='3px solid #ddd';});
+  el.style.border='3px solid #c8600a';elderSurvey.buy=val;
+}
+async function elderSubmit(){
+  const rec={type:'elder',id:Date.now(),time:new Date().toLocaleString('zh-CN'),...elderSurvey,scores:{...elderSc},comment:document.getElementById('el_comment')?.value||''};
+  try{const k='e_recs';const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(rec);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
+  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});}catch(e){}
+  renderElder(7);
+  const ov=elderSc.overall;
+  document.getElementById('el_reportEmoji').textContent=ov==='happy'?'😊':ov==='ok'?'😐':'😞';
+  document.getElementById('el_reportText').textContent=ov==='happy'?'您对这款食品评价很好！感谢您的参与。':ov==='ok'?'您对这款食品感觉一般，感谢您的诚实反馈！':'感谢您的参与，您的意见对产品改进很重要！';
+  const tips=[];
+  if(elderSc.taste==='sad')tips.push('味道方面还需改进');
+  if(elderSc.texture==='sad')tips.push('口感可以更软糯一些');
+  if(elderSc.saltiness==='sad')tips.push('咸淡需要调整');
+  document.getElementById('el_reportTips').innerHTML=tips.length?tips.map(t=>`<div style="font-size:16px;color:#555;padding:6px 0;border-bottom:1px solid #f0f0f0;">📌 ${t}</div>`).join(''):`<div style="font-size:16px;color:#2a9a2a;">✅ 各方面评价都不错！</div>`;
+}
+
+// ════════════ 教师端 ════════════
+function tUnlock(){if(document.getElementById('t_pwd').value===TEACHER_PWD){document.getElementById('t_lock').style.display='none';document.getElementById('t_dash').style.display='block';tRefresh();}else alert('密码错误');}
+function tRefresh(){
+  let all=[];
+  for(let i=1;i<=2;i++){try{const s=localStorage.getItem('s_recs_w'+i);if(s)all=[...all,...JSON.parse(s)];}catch(e){}}
+  try{const e=localStorage.getItem('e_recs');if(e)all=[...all,...JSON.parse(e)];}catch(e){}
+  try{const el=localStorage.getItem('e_recs');if(el)all=[...all,...JSON.parse(el).filter(r=>r.type==='elder')];}catch(e){}
+  allRecords=all;
+  const sRecs=all.filter(r=>!r.type||r.type==='sensory_student');
+  const eRecs=all.filter(r=>r.type==='etongue');
+  const elRecs=all.filter(r=>r.type==='elder');
+  document.getElementById('t_stats').innerHTML=`
+    <div class="t-stat"><div class="t-stat-n" style="color:var(--gold)">${sRecs.length}</div><div class="t-stat-l">感官评价记录</div></div>
+    <div class="t-stat"><div class="t-stat-n" style="color:var(--green)">${eRecs.length}</div><div class="t-stat-l">AI问答记录</div></div>
+    <div class="t-stat"><div class="t-stat-n" style="color:#f5a020">${elRecs.length}</div><div class="t-stat-l">老人品尝记录</div></div>
+    <div class="t-stat"><div class="t-stat-n" style="color:var(--blue)">${new Set(all.map(r=>r.stuId||r.elderId||r.id)).size}</div><div class="t-stat-l">参与人次</div></div>`;
+  tRenderChart(all);tRenderRecs(all);
+}
+function tRenderChart(data){
+  const sensoryData=data.filter(r=>r.sample&&r.overall);
+  const sampleGroups={};
+  sensoryData.forEach(r=>{if(!sampleGroups[r.sample])sampleGroups[r.sample]=[];sampleGroups[r.sample].push(r.overall);});
+  const labels=Object.keys(sampleGroups);
+  const avgs=labels.map(s=>{const arr=sampleGroups[s];return arr.reduce((a,b)=>a+b,0)/arr.length;});
+  const ctx=document.getElementById('t_chart').getContext('2d');
+  if(tChart)tChart.destroy();
+  tChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'总体接受度（平均分）',data:avgs,backgroundColor:labels.map((_,i)=>['#f5c842','#7bc32a','#7ab8f5','#f5a020','#e05a5a'][i%5]+'99'),borderWidth:0,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:1,max:9,ticks:{color:'#888'},grid:{color:'#1a1a1a'}},x:{ticks:{color:'#ccc'},grid:{display:false}}}}});
+}
+function tRenderRecs(data){
+  const el=document.getElementById('t_recs');
+  const recent=data.slice(-20).reverse();
+  if(!recent.length){el.innerHTML='<p style="color:var(--dim);font-size:12px;text-align:center;padding:14px;">暂无数据</p>';return;}
+  el.innerHTML=recent.map(r=>`<div class="rec">
+    <div class="rec-top"><span class="rec-q">${r.sample||r.food||'—'}</span><span class="badge bc">${r.type||'感官'}</span></div>
+    <div style="font-size:10px;color:var(--dim);">${r.stuId||r.elderId||'匿名'} · ${r.time||'—'}</div>
+    ${r.overall?`<div style="font-size:10px;color:var(--muted);margin-top:2px;">总体接受度: ${r.overall}分 | 购买: ${r.buy||'—'}</div>`:''}
+    ${r.q?`<div style="font-size:10px;color:var(--muted);margin-top:2px;">Q: ${r.q.substring(0,40)}...</div>`:''}
+  </div>`).join('');
+}
+function tExport(){
+  const h='时间,类型,ID,样品,鲜味,咸淡,辣味,酸味,回味,软硬,咀嚼感,总体,购买意愿,价格意愿,文字评价\n';
+  const rows=allRecords.map(r=>[r.time,r.type||'感官',r.stuId||r.elderId||'匿名',r.sample||r.food||'—',r.umami||'—',r.salt||'—',r.spicy||'—',r.sour||'—',r.after||r.aftertaste||'—',r.texture||'—',r.chew||'—',r.overall||'—',r.buy||'—',r.price||'—',(r.comment||'').replace(/,/g,'，')].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+rows],{type:'text/csv;charset=utf-8'}));a.download=`食品感知数据_第${WEEK}周.csv`;a.click();
+}
+</script>
+</body>
+</html>
