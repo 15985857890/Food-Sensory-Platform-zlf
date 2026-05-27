@@ -263,6 +263,14 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
         <div class="mod-desc">大字体 · 表情评分 · 简单易用<br>养老院数据采集专用</div>
       </div>
     </div>
+
+    <div class="mod-card" style="background:#001a1a;border:2px solid #00aabb55;cursor:pointer;" onclick="openApp('pca')">
+      <div class="mod-icon" style="background:#00aabb22;font-size:28px;">📈</div>
+      <div class="mod-text">
+        <div class="mod-name" style="color:#00ccdd;">PCA自动分析</div>
+        <div class="mod-desc" style="color:#008899;">粘贴电子舌数据 · 自动PCA图<br>置信椭圆 · 下载PNG · AI解读</div>
+      </div>
+    </div>
     <div class="mod-card mod-teacher" onclick="openApp('teacher')">
       <div class="mod-icon">📊</div>
       <div class="mod-text">
@@ -518,10 +526,19 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
         <div class="ai-t" id="e_aiText"></div>
         <div class="ev-wrap" id="e_evWrap">
           <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px;">📝 批判性评价（必填）</div>
-          <div class="ev-opts">
-            <label class="ev-opt"><input type="radio" name="ev" value="correct"><span>✅ AI正确，我理解了</span></label>
-            <label class="ev-opt"><input type="radio" name="ev" value="partial"><span>⚠️ 部分正确，有遗漏</span></label>
-            <label class="ev-opt"><input type="radio" name="ev" value="wrong"><span>❌ 有错误，我找到了</span></label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin:8px 0;">
+            <label style="display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:1px solid #2a3a1a;background:#0d1a00;cursor:pointer;">
+              <input type="radio" name="ev" value="correct" style="width:18px;height:18px;flex-shrink:0;accent-color:#7bc32a;cursor:pointer;">
+              <span style="font-size:13px;color:#c8f0a0;line-height:1.4;">✅ AI正确，我理解了</span>
+            </label>
+            <label style="display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:1px solid #3a2a00;background:#1a1400;cursor:pointer;">
+              <input type="radio" name="ev" value="partial" style="width:18px;height:18px;flex-shrink:0;accent-color:#f5a020;cursor:pointer;">
+              <span style="font-size:13px;color:#f0d080;line-height:1.4;">⚠️ 部分正确，有遗漏</span>
+            </label>
+            <label style="display:flex;flex-direction:row;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:1px solid #3a1a1a;background:#1a0a0a;cursor:pointer;">
+              <input type="radio" name="ev" value="wrong" style="width:18px;height:18px;flex-shrink:0;accent-color:#e05a5a;cursor:pointer;">
+              <span style="font-size:13px;color:#f0a0a0;line-height:1.4;">❌ 有错误，我找到了</span>
+            </label>
           </div>
           <textarea id="e_evCmt" placeholder="AI答对/漏/错了什么？" style="margin-bottom:8px;"></textarea>
           <button class="btn btn-g" onclick="eSubmit()">✓ 提交保存</button>
@@ -563,6 +580,71 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
 <!-- ══════════════════════════════
      模块D：教师端
 ══════════════════════════════ -->
+<div class="app" id="appPca" style="background:#0a0a0a;min-height:100vh;">
+  <div class="hdr">
+    <div class="hdr-icon" style="background:linear-gradient(135deg,#00aabb,#00ddee);">📈</div>
+    <div><h1 style="color:#00ccdd;">PCA自动分析</h1><p>电子舌主成分分析可视化</p></div>
+    <button class="hdr-back" onclick="backHome()">⌂ 返回</button>
+  </div>
+  <div style="padding:14px;max-width:800px;margin:0 auto;">
+    <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #2a2a2a;" id="pcaTabBar">
+      <button class="tab on" onclick="pcaTab(0)" id="ptb0">① 录入数据</button>
+      <button class="tab" onclick="pcaTab(1)" id="ptb1">② PCA图</button>
+      <button class="tab" onclick="pcaTab(2)" id="ptb2">③ 数据表</button>
+      <button class="tab" onclick="pcaTab(3)" id="ptb3">④ 解读报告</button>
+    </div>
+    <div class="panel on" id="pcp0">
+      <div class="card"><div class="ct">📡 传感器顺序</div><div id="pcaSensorOrder" style="display:flex;flex-wrap:wrap;gap:6px;"></div></div>
+      <div class="card">
+        <div class="ct">📋 粘贴Excel数据</div>
+        <div style="padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:10px;background:#1a1200;border:1px solid #4a3000;color:#f5c842;">格式：每行一个样品，第一列样品名，其余列为传感器数值（Tab或逗号分隔）</div>
+        <label class="fl">粘贴数据</label>
+        <textarea id="pcaPasteData" rows="7" placeholder="S-01&#9;2.1&#9;-0.5&#9;0.3&#9;1.2&#9;0.8&#9;1.5&#9;0.2&#9;-0.3&#10;S-01&#9;1.8&#9;-0.3&#9;0.4&#9;1.0&#9;0.7&#9;1.3&#9;0.1&#9;-0.2&#10;S-02&#9;-1.2&#9;2.3&#9;-0.8&#9;2.1&#9;-0.5&#9;0.3&#9;1.8&#9;2.2"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+          <button class="btn btn-g" onclick="pcaParsePaste()">📥 解析导入</button>
+          <button class="btn btn-o" onclick="pcaLoadDemo()">📖 示例数据</button>
+          <button class="btn btn-o" onclick="pcaClearData()">🗑 清空</button>
+        </div>
+      </div>
+      <div class="card" id="pcaPreviewCard" style="display:none;">
+        <div class="ct">✅ 数据预览</div>
+        <div id="pcaDataPreview"></div>
+        <button class="btn btn-g" onclick="pcaRun()" style="margin-top:10px;">🔬 运行PCA分析 →</button>
+      </div>
+    </div>
+    <div class="panel" id="pcp1">
+      <div class="card">
+        <div class="ct">📊 PCA散点图</div>
+        <div id="pcaQuality" style="margin-bottom:10px;"></div>
+        <div style="background:#0d0d0d;border-radius:10px;padding:10px;">
+          <canvas id="pcaMainChart" height="360"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">⚙️ 图表设置</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div><label class="fl">置信椭圆</label>
+            <select id="pcaEllipse" onchange="pcaChart2()"><option value="yes">显示（需≥3平行样）</option><option value="no">不显示</option></select></div>
+          <div><label class="fl">图表标题</label><input id="pcaTitle" value="电子舌PCA分析图" oninput="pcaChart2()"></div>
+        </div>
+        <button class="btn btn-g" onclick="pcaDownload()">💾 下载PNG图片</button>
+      </div>
+    </div>
+    <div class="panel" id="pcp2">
+      <div class="card"><div class="ct">📋 PCA得分矩阵</div><div id="pcaScoreTable" style="overflow-x:auto;"></div></div>
+      <div class="card"><div class="ct">📋 载荷矩阵</div><div id="pcaLoadingTable" style="overflow-x:auto;"></div></div>
+    </div>
+    <div class="panel" id="pcp3">
+      <div class="card"><div class="ct">📝 自动解读报告</div><div id="pcaAutoReport"></div></div>
+      <div class="card">
+        <div class="ct">🤖 AI深度解读</div>
+        <button class="btn btn-g" onclick="pcaAI()" id="pcaAIBtn">🤖 生成AI解读</button>
+        <div id="pcaAIResult" style="margin-top:10px;display:none;background:#0d1500;border:1px solid #1a3000;border-radius:8px;padding:12px;font-size:13px;line-height:1.8;color:#d0d0d0;white-space:pre-wrap;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="app" id="appTeacher">
   <div class="hdr">
     <div class="hdr-icon" style="background:linear-gradient(135deg,#1a7a1a,var(--green));">📊</div>
@@ -600,7 +682,7 @@ input[type=password]{width:160px;background:#0d0d0d;border:1px solid var(--borde
 // ════════════ 配置 ════════════
 const WEEK = 1;           // 1=第一周 2=第二周
 const TEACHER_PWD = 'putian2024';
-const SERVER_URL = 'http://192.168.1.100:8765'; // ← 改成您电脑IP
+const SERVER_URL = 'http://192.168.210.45:8765'; // ← 改成您电脑IP
 
 const SAMPLES_W1 = ['S-01','S-02','S-03','S-04'];
 const SAMPLES_W2 = ['S-01','S-02','S-03','S-04','S-05'];
@@ -608,41 +690,77 @@ const SAMPLES = WEEK===1 ? SAMPLES_W1 : SAMPLES_W2;
 
 // ════════════ 知识库 ════════════
 const KB=[
-  {title:'为什么电子舌数值是负数？',tag:'基础原理',
-   content:`Insent电子舌使用参考电位法：\n输出值 = 样品电位 − 标准液电位\n• 正值 → 高于标准液\n• 负值 → 低于标准液（不代表无味！）\n⚠ AI常见错误：说"负值=无法检测"——这是错的。`,
+  {title:'为什么AAE鲜味值是负数？',tag:'基础原理',
+   content:'Insent电子舌使用参考电位法。\n输出值 = 样品电位 - 标准液电位（0.1mM KCl）\n\n正值表示高于标准液，负值表示低于标准液，负值不代表无味！\n\n例：鲜味 AAE = -3.2\n意思是谷氨酸响应低于标准液，不代表样品没有鲜味。\n\nAI常见错误：说负值等于无法检测——这是错的。',
    source:'Insent操作手册Ch.3'},
-  {title:'各传感器含义',tag:'传感器',
-   content:`UNS 鲜味：谷氨酸、肌苷酸\nBT  苦味：咖啡因、苦味酸\nCA  酸味：氢离子浓度（pH）\nAHS 涩味：单宁、多酚\nPKS 后苦漂移：苦味残留\nANS 后鲜漂移：鲜味残留`,
+  {title:'Insent传感器代号（正确版）',tag:'传感器原理',
+   content:'SA402B型电子舌共7个传感器：\n\nAAE 鲜味：谷氨酸MSG、肌苷酸IMP\nBT0 苦味：咖啡因、奎宁、苦味酸\nCA0 酸味：氢离子浓度，与pH直接相关\nAE1 涩味：单宁、多酚\nC00 咸味：氯化钠等电解质\nAftertasteB 后苦回味：苦味物质膜残留（回苦）\nRichness 丰富度：鲜味物质膜残留（回鲜）\n\n注意：传感器存在交叉响应，并非100%专一。',
    source:'Toko et al.(2013)'},
-  {title:'人感官与仪器不一致的原因',tag:'核心教学',
-   content:`人的感官受气味/温度/心理协同影响\n电子舌测标准化电化学响应\n→ 两者测的不是同一件事\n\n典型案例：\n"人感觉鲜但UNS低"\n→ 鲜味来源是IMP（UNS对IMP响应弱）\n→ 或气味增强了鲜味感知（协同效应）`,
-   source:'Rudnitskaya(2015)'},
-  {title:'海带鲜味来源',tag:'食品案例',
-   content:`海带天然谷氨酸含量极高（约1-3% dry weight）\n是味精的天然来源\n\n影响鲜味的因素：\n• 浸提温度（60-80℃最佳）\n• 浸提时间\n• 品种（真海带>裙带菜）\n• 新鲜度\n\n配方启示：\n优化浸提工艺可减少味精添加量\n电子舌UNS值可定量评估浸提效果`,
-   source:'Food Chemistry海带研究'},
-  {title:'酵母提取物替代味精',tag:'配方改革',
-   content:`酵母提取物（YE）：清洁标签替代味精\n配料表标注"酵母提取物"，消费者接受度高\n\n使用比例：\n0.3% YE ≈ 0.8% 味精的鲜味强度\n高温灭菌后鲜味留存率87%\n\n注意：\n不同品牌YE鲜味强度不同\n需要电子舌UNS值验证实际效果\n目标：改配方后UNS值与原配方差异<10%`,
-   source:'安琪酵母2025数据；行业研究'},
-];
-
+  {title:'Insent操作流程',tag:'操作规范',
+   content:'感应器活化20小时。甜味感应器GL1单独放内侧。\n2个参比电极用浸泡液浸泡。\n5个感应器各加200微升内部液，浸入参比溶液。\n感应器按编号装好（1-1, 2-2...）。\n准备14杯reference，液面比杯线高1-2mm。\n\n软件操作：\n启动：sensor → mount sensors\n命名样品1,2,3后点击start\n结束：stop → sensor → remove sensors → exit',
+   source:'Insent操作手册'},
+  {title:'标准溶液配制',tag:'试剂配制',
+   content:'参比溶液（30mM KCl + 0.3mM酒石酸）\n1L：900mL蒸馏水 + 0.045g酒石酸 + 2.24g KCl，定容至1L。\n\n咸味标准液（300mM KCl + 0.3mM酒石酸）\n1L：22.37g KCl + 0.045g酒石酸，定容。\n\n酸味标准液（30mM KCl + 3.0mM酒石酸）\n1L：2.24g KCl + 0.45g酒石酸，定容。\n\n鲜味标准液：基液 + 1.87g谷氨酸钠MSG\n涩味标准液：基液 + 0.5g单宁酸\n苦味标准液：基液 + 0.04g盐酸奎宁\n\n重要：标准样品冰箱保存，有效期1个月，过期严禁使用。',
+   source:'Insent操作手册'},
+  {title:'数据处理流程',tag:'数据分析',
+   content:'常规处理：\n1. 打开data analysis，读取.dat原文件\n2. 进行纵向或横向链接link\n3. Delete method：第一轮重复作为0，勾选individual、interpolating、apply、regard\n4. 生成delete文件\n5. 选择foodstuff evaluation.ece进行Transformation\n6. 制作Radar chart或2D chart\n\n替代方式（第一次不为0时）：\nstatistics analysis → interpolating → apply生成IA文件\n→ Transformation → apply → foodstuff evaluation → 作图',
+   source:'Insent数据分析手册'},
+  {title:'人感官与电子舌不一致的原因',tag:'核心教学',
+   content:'人的感官和电子舌测量的是两件不同的事。\n\n人的感官：阈值极低，受温度气味颜色协同影响，有感官疲劳和心理预期，个体差异大。\n\n电子舌：测标准化电化学响应，不受气味质地影响，对极低浓度不敏感，无感官掩盖效应。\n\n典型案例：人感觉鲜但AAE值低\n可能原因1：气味增强了鲜味感知（协同效应）\n可能原因2：鲜味来源是IMP（AAE对IMP响应弱于MSG）',
+   source:'Rudnitskaya(2015)；食品感官科学教材'},
+  {title:'海带天然鲜味与提取',tag:'海带专项',
+   content:'海带天然谷氨酸含量约1-3%干重，是味精的天然来源。\n\n影响鲜味释放的因素：\n浸提温度60-80摄氏度最佳，高于80度谷氨酸降解\n浸提时间30-60分钟\n品种：真海带谷氨酸含量高于裙带菜\n\n电子舌应用：\nAAE值可定量评估不同浸提工艺的鲜味释放效率\n正确浸提工艺可减少约50%味精添加量',
+   source:'Food Chemistry(2019)'},
+  {title:'清洁标签改革方案',tag:'配方改革',
+   content:'味精替换为酵母提取物YE：\n配料表标注酵母提取物，消费者接受度高\n替换比例：0.3%YE约等于0.8%味精鲜味强度\n高温灭菌后鲜味留存率87%\n目标：改配方后AAE值变化低于10%\n\n安赛蜜替换为罗汉果苷：\n用量极少（0.01-0.03%），成本影响可忽略\n\n冰乙酸替换为酿造醋：\n直接替换，配料表更友好\n\n山梨酸钾替换为栅栏技术：\n水活度低于0.85 + pH 4.2 + 聚赖氨酸0.03%\n充氮包装 + 75度5分钟封口前杀菌',
+   source:'食品科学与工程学报(2024)'},
+  {title:'鱼丸鲜度与储存变化',tag:'海产品案例',
+   content:'ATP降解链：ATP → IMP（鲜）→ HxR → Hx（苦）\n\n4摄氏度真空包装：7天后AAE仍保持正值\n4摄氏度普通包装：5天后AAE开始下降\n25摄氏度普通包装：3天内AAE出现负值，BT0快速升高\n\n关键发现：\n电子舌可比人感官早1-2天发现变质\nC00咸味值储存中基本稳定，可作内参考',
+   source:'Wu Y. et al.(2019) Food Chemistry'},
+  {title:'老年人味觉特点与食品设计',tag:'老年人研究',
+   content:'65岁以上：味蕾减少30-50%\n鲜味阈值升高，需更高AAE值才能感知\n苦味敏感度下降\n甜味和咸味阈值升高\n\n老年食品设计目标：\nAAE目标值比普通产品高20-30%\nC00值控制（适合高血压老人）\nCT3硬度低于1200g力（软糯易咀嚼）\nBT0和AE1值控制（低苦低涩）\n\n电子舌可建立传感器数值与老年人接受度的映射模型。',
+   source:'Nordin et al.(2012) Chemical Senses'},
+  {title:'电子舌能替代人工感官评价吗？',tag:'常见问题',
+   content:'不能完全替代，但可有效补充。\n\n电子舌优势：\n客观不受评价员状态影响\n可重复性高，CV低于5%\n快速筛查（约3分钟每个样品）\n数据可存档溯源建模\n\n电子舌局限：\n无法感知气味（需搭配电子鼻）\n无法感知质地（需搭配质构仪）\n传感器约每3个月校准一次\n全新食品需重新建立数据库\n\n核心理念：\n技术能力不等于决策正确性\n仪器给数据，人来做判断，AI帮助理解',
+   source:'Rudnitskaya and Legin(2008)；ISO 11036'}
+,
+  {title:'PCA图核心解读方法',tag:'数据分析-PCA',
+   content:'坐标轴贡献率：横轴为PC1，纵轴为PC2。各轴括号内百分比（如PC1: 75%）代表该轴解释样本总特征信息量的比例，两者相加高于80-85%说明图具有高代表性。\n\n空间距离与风味差异：散点之间的距离代表风味综合差异。距离越近的样本整体味觉特征越相似（如平行样）；距离越远说明风味差异显著。\n\n样品风味定位：某样品在PC1正半轴漂移，可结合载荷图Loading plot观察哪种传感器贡献最大，从而判断该样品的特征风味走向。',
+   source:'电子舌数据分析规范；PCA方法论'},
+  {title:'Insent软件PCA作图步骤',tag:'数据分析-PCA',
+   content:'完成Delete method和Transformation（生成ID文件）后：\n1. 点击导航栏Statistics Analysis\n2. 选择PCA或Principal Component Analysis\n3. 框选需要比对的样品ID文件（平行样命名规范：1-1, 1-2, 1-3）\n4. 点击Run或Apply，系统自动生成2D散点图\n5. 右键选择Save Image导出PCA图\n6. 或选择Export Data导出主成分得分矩阵，用于Origin等第三方软件重绘',
+   source:'Insent数据分析软件手册'},
+  {title:'Origin软件绘制高水平PCA图',tag:'数据分析-PCA',
+   content:'将电子舌导出的主成分得分数据（PC1和PC2的Score值）导入Origin：\n1. 新建工作表，PC1为X轴，PC2为Y轴，样品名称为Label\n2. 选中数据绘制Scatter散点图\n3. 按样品类别分组Group并涂不同颜色\n4. 添加95%置信椭圆Confidence Ellipse：\n   椭圆完全不重叠 → 风味有显著性差异\n   椭圆重叠 → 风味高度相似\n\n发表论文建议使用Origin重绘，美观度远高于软件自带图。',
+   source:'Origin软件教程；食品感官数据可视化规范'},
+  {title:'无味点定义与基准',tag:'无味点',
+   content:'INSENT电子舌的无味点是系统测定的基准零点，由参比溶液（Reference solution）充当。\n\n在数据处理时，无味样品的风味强度被定义为0，系统通过计算待测样品与参比溶液之间的电位差值，转换为实际味觉指标得分。\n\n参比溶液化学组成：30mM氯化钾 + 0.3mM酒石酸\n精准配方（1L）：2.2365g氯化钾 + 0.045g酒石酸\n该溶液的电位响应即为各传感器定义的绝对零度。',
+   source:'Insent操作手册；无味点标定规范'},
+  {title:'无味点归零校准操作',tag:'无味点',
+   content:'原文件(.dat)中第一轮测试结果因传感器表面尚未稳定，不作为绝对基准。\n\n归零操作步骤（Delete Method）：\n打开data analysis → Delete method界面\n勾选将第一轮重复作为0处理\n勾选选项：individual、interpolating、apply、regard\n\n作用：消除背景干扰，让后续批次基准线对齐到无味点。\n\n注意：此步骤是保证数据可比性的关键，不可跳过。',
+   source:'Insent数据分析手册；数据处理规程'},
+  {title:'传感器AAE鲜味值为负数的深层解释',tag:'无味点',
+   content:'AAE鲜味传感器的零点由参比溶液（30mM KCl + 0.3mM酒石酸）定义。\n\n负值含义：样品鲜味响应低于参比溶液设定的零点基准，表示鲜味物质浓度相对较低。\n\n不同负值程度的含义：\n0到-2：轻微低于标准，鲜味物质存在但偏弱\n-2到-5：明显低于标准，鲜味较弱\n低于-5：鲜味物质浓度很低或已明显降解\n\n实际意义：鱼丸储存后AAE从正值变为负值，说明IMP等鲜味物质已降解，产品鲜度下降。这是判断储存变质的重要指标。',
+   source:'Insent传感器原理文档；食品鲜度检测规范'}]
 const E_SENSORS=[
-  {id:'AAE',         label:'鲜味 AAE',        hint:'谷氨酸等鲜味物质',    sk:'umami'},
-  {id:'BT0',         label:'苦味 BT0',         hint:'咖啡因、苦味酸',      sk:'bitter'},
-  {id:'CA0',         label:'酸味 CA0',         hint:'氢离子（pH相关）',    sk:'sour'},
-  {id:'AE1',         label:'涩味 AE1',         hint:'单宁等涩味物质',      sk:'astringent'},
-  {id:'C00',         label:'咸味 C00',         hint:'氯化钠等咸味物质',    sk:'salty'},
-  {id:'AftertasteB', label:'后苦回味 Aft-B',   hint:'苦味在口腔的残留',    sk:null},
-  {id:'Richness',    label:'丰富度 Richness',  hint:'鲜味丰富度/后鲜回味', sk:null},
+  {id:'AAE',    label:'鲜味 AAE',          hint:'谷氨酸MSG、肌苷酸IMP等鲜味物质',  sk:'umami'},
+  {id:'C00',    label:'苦味 C00',          hint:'咖啡因、奎宁、苦味肽',            sk:'bitter'},
+  {id:'CA0',    label:'酸味 CA0',          hint:'氢离子浓度，与pH直接相关',        sk:'sour'},
+  {id:'AE1',    label:'涩味 AE1',          hint:'单宁、多酚等涩味物质',           sk:'astringent'},
+  {id:'CT0',    label:'咸味 CT0',          hint:'氯化钠等电解质咸味物质',         sk:'salty'},
+  {id:'RichnessAAE',  label:'鲜回味 Richness',   hint:'鲜味丰富度，AAE传感器检测（回鲜）',    sk:null},
+  {id:'AftC00', label:'苦回味 Aft-Bitterness',  hint:'苦味残留，C00传感器检测（后苦）',  sk:null},
+  {id:'AftAE1', label:'涩回味 Aft-Astringency', hint:'涩味残留，AE1传感器检测（后涩）',  sk:null},
 ];
 const E_SENSORY=[
   {id:'umami',      label:'鲜味',     sid:'AAE'},
-  {id:'bitter',     label:'苦味',     sid:'BT0'},
+  {id:'bitter',     label:'苦味',     sid:'C00'},
   {id:'sour',       label:'酸味',     sid:'CA0'},
   {id:'astringent', label:'涩味',     sid:'AE1'},
-  {id:'salty',      label:'咸味',     sid:'C00'},
+  {id:'salty',      label:'咸味',     sid:'CT0'},
   {id:'overall',    label:'总体接受', sid:null},
 ];
-const E_PREQ=['为什么UNS鲜味值是负数？','感官和电子舌不一致，为什么？','苦味BT和涩味AHS有什么区别？','酵母提取物能替代味精吗？','电子舌能替代人工感官评价吗？'];
+const E_PREQ=['为什么AAE鲜味值是负数？','感官和电子舌不一致，为什么？','苦味BT0和涩味AE1有什么区别？','酵母提取物能替代味精吗？','电子舌能替代人工感官评价吗？'];
 
 // ════════════ 全局状态 ════════════
 let curApp='';
@@ -662,6 +780,7 @@ function openApp(name){
   if(name==='sensory') sInit();
   if(name==='etongue') eInit();
   if(name==='elder') elderInit();
+  if(name==='pca'){pcaInitUI();}
   if(name==='teacher'){}
 }
 function backHome(){
@@ -890,111 +1009,394 @@ function elderInit(){
   elderSurvey={};elderSc={};
   renderElder(0);
 }
-const ELDER_STEPS=[
-  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
-    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">👋 您好！感谢参与品尝</div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">您的编号（工作人员填写）</label>
-      <input id="el_id" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="请输入编号"></div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">您的年龄</label>
-      <select id="el_age" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;">
-        <option value="">请选择</option><option value="60-65">60-65岁</option><option value="65-70">65-70岁</option>
-        <option value="70-75">70-75岁</option><option value="75-80">75-80岁</option><option value="80+">80岁以上</option></select></div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">今天身体状况</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <button onclick="elderSelHealth(this,'好')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😊 很好</button>
-        <button onclick="elderSelHealth(this,'一般')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😐 一般</button>
-        <button onclick="elderSelHealth(this,'不太好')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">😕 不太好</button>
-        <button onclick="elderSelHealth(this,'感冒')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#1a1a1a;cursor:pointer;">🤧 感冒</button>
-      </div></div>
-    <button onclick="elderNext(0)" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>
-  </div>`,
-  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
-    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🍜 今天品尝的食品</div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">食品名称</label>
-      <input id="el_food" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="例：海带"></div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:8px;">样品编号</label>
-      <input id="el_code" style="border:2px solid #ddd;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;" placeholder="例：S-01"></div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="renderElder(0)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>
-      <button onclick="elderNext(1)" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">下一步 →</button>
-    </div></div>`,
-  ()=>elderEmojiStep('overall','这个食品<span style="color:#c8600a">总体</span>怎么样？',2),
-  ()=>elderEmojiStep('taste','这个食品的<span style="color:#c8600a">味道</span>怎么样？',3),
-  ()=>elderEmojiStep('texture','这个食品吃起来<span style="color:#c8600a">软硬</span>怎么样？',4),
-  ()=>elderEmojiStep('saltiness','这个食品的<span style="color:#c8600a">咸淡</span>怎么样？',5),
-  ()=>`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
-    <div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🛒 如果在超市看到这个食品，您会买吗？</div>
-    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
-      <button onclick="elderBuy(this,'yes')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">🛒<br>会买</button>
-      <button onclick="elderBuy(this,'maybe')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">🤔<br>考虑</button>
-      <button onclick="elderBuy(this,'no')" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:16px;font-weight:700;color:#1a1a1a;">❌<br>不买</button>
-    </div>
-    <div style="margin-bottom:14px;"><label style="display:block;font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:6px;">有什么意见？（可不填）</label>
-      <textarea id="el_comment" style="border:2px solid #ddd;border-radius:10px;padding:12px;font-size:16px;width:100%;min-height:60px;" placeholder="例：太咸了 太硬了"></textarea></div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="renderElder(5)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>
-      <button onclick="elderSubmit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">✓ 完成品尝</button>
-    </div></div>`,
-  ()=>`<div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid #f0c080;border-radius:16px;padding:24px;text-align:center;">
-    <div style="font-size:64px;margin-bottom:12px;" id="el_reportEmoji">🎉</div>
-    <div style="font-size:24px;font-weight:700;color:#c8600a;margin-bottom:10px;">感谢您的参与！</div>
-    <div style="font-size:17px;color:#1a1a1a;line-height:1.8;margin-bottom:16px;" id="el_reportText"></div>
-    <div style="background:#fff;border-radius:10px;padding:14px;border:1px solid #f0d0b0;text-align:left;" id="el_reportTips"></div>
-    <button onclick="elderInit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;margin-top:16px;">继续下一位品尝者</button>
-  </div>`,
-];
-function elderEmojiStep(dim,question,nextStep){
-  const OPTS=[{v:'happy',icon:'😊',label:'很好'},{v:'ok',icon:'😐',label:'一般'},{v:'sad',icon:'😞',label:'不好'}];
-  return`<div style="background:#fff;border:2px solid #f0d0b0;border-radius:16px;padding:20px;margin-bottom:14px;">
-    <div style="font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:18px;line-height:1.5;">${question}</div>
-    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:18px;">
-      ${OPTS.map(o=>`<button onclick="elderRate('${dim}','${o.v}',${nextStep},this)"
-        style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">
-        <span style="font-size:44px;display:block;margin-bottom:6px;">${o.icon}</span>
-        <span style="font-size:16px;font-weight:700;color:#1a1a1a;">${o.label}</span>
-      </button>`).join('')}
-    </div>
-    <button onclick="renderElder(${nextStep-1})" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;width:100%;cursor:pointer;">← 上一步</button>
-  </div>`;
+
+function renderElder(step){
+  var c=document.getElementById('elderContent');
+  if(!c)return;
+  if(step===0) c.innerHTML=elHTML0();
+  else if(step===1) c.innerHTML=elHTML1();
+  else if(step===2) c.innerHTML=elHTMLQ('overall','这个食品<b style="color:#c8600a">总体</b>怎么样？',1,3);
+  else if(step===3) c.innerHTML=elHTMLQ('taste','这个食品的<b style="color:#c8600a">味道</b>怎么样？',2,4);
+  else if(step===4) c.innerHTML=elHTMLQ('texture','吃起来<b style="color:#c8600a">软硬</b>怎么样？',3,5);
+  else if(step===5) c.innerHTML=elHTMLQ('saltiness','这个食品<b style="color:#c8600a">咸淡</b>怎么样？',4,6);
+  else if(step===6) c.innerHTML=elHTML6();
+  else if(step===7) c.innerHTML=elHTML7();
+  else console.error('步骤'+step+'不存在');
 }
-function renderElder(step){document.getElementById('elderContent').innerHTML=ELDER_STEPS[step]();}
-function elderSelHealth(el,val){document.querySelectorAll('#elderContent button').forEach(b=>{if(['好','一般','不太好','感冒'].some(v=>b.textContent.includes(v)))b.style.border='2px solid #ddd';});el.style.border='3px solid #c8600a';elderSurvey.health=val;}
-function elderNext(step){
-  if(step===0){
-    elderSurvey.id=document.getElementById('el_id')?.value||'';
-    elderSurvey.age=document.getElementById('el_age')?.value||'';
-  }
-  if(step===1){
-    elderSurvey.food=document.getElementById('el_food')?.value||'';
-    elderSurvey.code=document.getElementById('el_code')?.value||'';
-  }
-  renderElder(step+1);
+
+// 步骤0：基本信息
+function elHTML0(){
+  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
+    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">👋 您好！感谢参与品尝</div>'
+    +'<div style="margin-bottom:14px;">'
+    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">您的编号</label>'
+    +'<input id="el_id" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="请输入编号">'
+    +'</div>'
+    +'<div style="margin-bottom:14px;">'
+    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">您的年龄</label>'
+    +'<select id="el_age" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;appearance:auto;">'
+    +'<option value="">请选择</option>'
+    +'<option value="60-65">60-65岁</option>'
+    +'<option value="65-70">65-70岁</option>'
+    +'<option value="70-75">70-75岁</option>'
+    +'<option value="75-80">75-80岁</option>'
+    +'<option value="80+">80岁以上</option>'
+    +'</select>'
+    +'</div>'
+    +'<div style="margin-bottom:16px;">'
+    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">今天身体状况</label>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +'<button id="hb0" type="button" onclick="elH(this,\'好\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😊 很好</button>'
+    +'<button id="hb1" type="button" onclick="elH(this,\'一般\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😐 一般</button>'
+    +'<button id="hb2" type="button" onclick="elH(this,\'不太好\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">😕 不太好</button>'
+    +'<button id="hb3" type="button" onclick="elH(this,\'感冒\')" style="padding:14px;border-radius:10px;border:2px solid #ddd;background:#fff;font-size:16px;font-weight:700;color:#333;cursor:pointer;">🤧 感冒</button>'
+    +'</div>'
+    +'</div>'
+    +'<button type="button" onclick="elGo1()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;">下一步 →</button>'
+    +'</div>';
 }
-function elderRate(dim,val,next,el){
-  el.parentElement.querySelectorAll('button').forEach(b=>b.style.border='3px solid #ddd');
-  el.style.border='3px solid #c8600a';elderSc[dim]=val;
-  setTimeout(()=>renderElder(next),400);
+
+// 步骤1：样品信息
+function elHTML1(){
+  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
+    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">🍜 今天品尝的食品</div>'
+    +'<div style="margin-bottom:14px;">'
+    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">食品名称</label>'
+    +'<input id="el_food" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：海带">'
+    +'</div>'
+    +'<div style="margin-bottom:16px;">'
+    +'<label style="display:block;font-size:18px;font-weight:700;color:#333;margin-bottom:8px;">样品编号</label>'
+    +'<input id="el_code" style="border:2px solid #f0c090;border-radius:10px;padding:12px 16px;font-size:18px;width:100%;background:#fff8f0;color:#333;font-family:inherit;" placeholder="例：S-01">'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;">'
+    +'<button type="button" onclick="renderElder(0)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>'
+    +'<button type="button" onclick="elGo2()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">下一步 →</button>'
+    +'</div>'
+    +'</div>';
 }
-function elderBuy(el,val){
-  document.querySelectorAll('#elderContent button').forEach(b=>{if(['会买','考虑','不买'].some(v=>b.textContent.includes(v)))b.style.border='3px solid #ddd';});
-  el.style.border='3px solid #c8600a';elderSurvey.buy=val;
+
+// 步骤2-5：表情评分页（通用）
+// 关键：用data属性存参数，onclick只传this，避免引号嵌套
+function elHTMLQ(dim, question, prevStep, nextStep){
+  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
+    +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:18px;line-height:1.5;">'+question+'</div>'
+    +'<div style="display:flex;gap:12px;justify-content:center;margin-bottom:18px;">'
+    +'<button type="button" '
+    +'data-dim="'+dim+'" data-val="happy" data-next="'+nextStep+'" '
+    +'onclick="elRate(this)" '
+    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
+    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😊</span>'
+    +'<span style="font-size:16px;font-weight:700;color:#333;">很好</span>'
+    +'</button>'
+    +'<button type="button" '
+    +'data-dim="'+dim+'" data-val="ok" data-next="'+nextStep+'" '
+    +'onclick="elRate(this)" '
+    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
+    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😐</span>'
+    +'<span style="font-size:16px;font-weight:700;color:#333;">一般</span>'
+    +'</button>'
+    +'<button type="button" '
+    +'data-dim="'+dim+'" data-val="sad" data-next="'+nextStep+'" '
+    +'onclick="elRate(this)" '
+    +'style="flex:1;padding:18px 6px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;">'
+    +'<span style="font-size:44px;display:block;margin-bottom:6px;">😞</span>'
+    +'<span style="font-size:16px;font-weight:700;color:#333;">不好</span>'
+    +'</button>'
+    +'</div>'
+    +'<button type="button" onclick="renderElder('+prevStep+')" '
+    +'style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;width:100%;cursor:pointer;">← 上一步</button>'
+    +'</div>';
 }
-async function elderSubmit(){
-  const rec={type:'elder',id:Date.now(),time:new Date().toLocaleString('zh-CN'),...elderSurvey,scores:{...elderSc},comment:document.getElementById('el_comment')?.value||''};
-  try{const k='e_recs';const ex=JSON.parse(localStorage.getItem(k)||'[]');ex.push(rec);localStorage.setItem(k,JSON.stringify(ex));}catch(e){}
-  try{await fetch(SERVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});}catch(e){}
+
+// 步骤6：购买意愿
+function elHTML6(){
+  return '<div style="background:#fff;border:2px solid #f0c090;border-radius:16px;padding:20px;margin-bottom:14px;">'
+    +'<div style="font-size:22px;font-weight:700;color:#c8600a;margin-bottom:16px;">如果在超市看到，您会买吗？</div>'
+    +'<div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">'
+    +'<button type="button" data-buy="yes" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">🛒<br>会买</button>'
+    +'<button type="button" data-buy="maybe" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">🤔<br>考虑</button>'
+    +'<button type="button" data-buy="no" onclick="elBuy(this)" style="flex:1;padding:20px 8px;border-radius:14px;border:3px solid #ddd;background:#fff;cursor:pointer;text-align:center;font-size:15px;font-weight:700;color:#333;">❌<br>不买</button>'
+    +'</div>'
+    +'<div style="margin-bottom:14px;">'
+    +'<label style="display:block;font-size:16px;font-weight:700;color:#333;margin-bottom:6px;">有什么意见？（可不填）</label>'
+    +'<textarea id="el_comment" style="border:2px solid #f0c090;border-radius:10px;padding:12px;font-size:16px;width:100%;min-height:60px;font-family:inherit;background:#fff8f0;color:#333;" placeholder="例：太咸了 太硬了"></textarea>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;">'
+    +'<button type="button" onclick="renderElder(5)" style="background:#f0f0f0;color:#888;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;width:30%;cursor:pointer;">← 返回</button>'
+    +'<button type="button" onclick="elSubmit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;flex:1;cursor:pointer;">✓ 完成品尝</button>'
+    +'</div>'
+    +'</div>';
+}
+
+// 步骤7：完成报告
+function elHTML7(){
+  return '<div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid #f0c080;border-radius:16px;padding:24px;text-align:center;">'
+    +'<div id="el_re" style="font-size:64px;margin-bottom:12px;">🎉</div>'
+    +'<div style="font-size:24px;font-weight:700;color:#c8600a;margin-bottom:10px;">感谢您的参与！</div>'
+    +'<div id="el_rt" style="font-size:17px;color:#333;line-height:1.8;margin-bottom:16px;"></div>'
+    +'<div id="el_rp" style="background:#fff;border-radius:10px;padding:14px;border:1px solid #f0d0b0;text-align:left;"></div>'
+    +'<button type="button" onclick="elderInit()" style="background:#c8600a;color:#fff;border:none;border-radius:12px;padding:16px;font-size:18px;font-weight:700;width:100%;cursor:pointer;margin-top:16px;">继续下一位品尝者</button>'
+    +'</div>';
+}
+
+// ── 事件处理函数 ──
+function elH(el,val){
+  // 重置所有健康按钮
+  ['hb0','hb1','hb2','hb3'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b){b.style.border='2px solid #ddd';b.style.background='#fff';}
+  });
+  el.style.border='3px solid #c8600a';
+  el.style.background='#fff0e0';
+  elderSurvey.health=val;
+}
+
+function elGo1(){
+  var idEl=document.getElementById('el_id');
+  var ageEl=document.getElementById('el_age');
+  elderSurvey.id=idEl?idEl.value||'未填':'未填';
+  elderSurvey.age=ageEl?ageEl.value||'未填':'未填';
+  if(!elderSurvey.health){alert('请先选择今天的身体状况');return;}
+  renderElder(1);
+}
+
+function elGo2(){
+  var foodEl=document.getElementById('el_food');
+  var codeEl=document.getElementById('el_code');
+  elderSurvey.food=foodEl?foodEl.value||'未命名':'未命名';
+  elderSurvey.code=codeEl?codeEl.value||'未填':'未填';
+  renderElder(2);
+}
+
+// 核心修复：用data属性传参，避免引号嵌套
+function elRate(el){
+  var dim=el.getAttribute('data-dim');
+  var val=el.getAttribute('data-val');
+  var next=parseInt(el.getAttribute('data-next'));
+  // 高亮选中
+  var parent=el.parentElement;
+  parent.querySelectorAll('button').forEach(function(b){
+    b.style.border='3px solid #ddd';
+    b.style.background='#fff';
+  });
+  el.style.border='3px solid #c8600a';
+  el.style.background='#fff0e0';
+  elderSc[dim]=val;
+  // 延迟跳转，让老人看到选中效果
+  setTimeout(function(){renderElder(next);}, 400);
+}
+
+function elBuy(el){
+  var val=el.getAttribute('data-buy');
+  el.parentElement.querySelectorAll('button').forEach(function(b){
+    b.style.border='3px solid #ddd';b.style.background='#fff';
+  });
+  el.style.border='3px solid #c8600a';el.style.background='#fff0e0';
+  elderSurvey.buy=val;
+}
+
+async function elSubmit(){
+  var commentEl=document.getElementById('el_comment');
+  var rec={
+    type:'elder',id:Date.now(),
+    time:new Date().toLocaleString('zh-CN'),
+    elderId:elderSurvey.id||'未填',
+    elderAge:elderSurvey.age||'未填',
+    elderHealth:elderSurvey.health||'未填',
+    food:elderSurvey.food||'未命名',
+    sample:elderSurvey.code||'未填',
+    elderBuy:elderSurvey.buy||'未选',
+    elderOverall:elderSc.overall||'未填',
+    elderTaste:elderSc.taste||'未填',
+    elderTexture:elderSc.texture||'未填',
+    elderSalt:elderSc.saltiness||'未填',
+    elderComment:commentEl?commentEl.value:''
+  };
+  console.log('老人端提交:', rec);
+  try{
+    var k='e_recs';
+    var ex=JSON.parse(localStorage.getItem(k)||'[]');
+    ex.push(rec);localStorage.setItem(k,JSON.stringify(ex));
+    console.log('本地保存成功，共'+ex.length+'条');
+  }catch(e){console.error('本地保存失败',e);}
+  try{
+    await fetch(SERVER_URL,{method:'POST',mode:'cors',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
+    console.log('服务器保存成功');
+  }catch(e){console.warn('服务器未连接，已保存本地');}
   renderElder(7);
-  const ov=elderSc.overall;
-  document.getElementById('el_reportEmoji').textContent=ov==='happy'?'😊':ov==='ok'?'😐':'😞';
-  document.getElementById('el_reportText').textContent=ov==='happy'?'您对这款食品评价很好！感谢您的参与。':ov==='ok'?'您对这款食品感觉一般，感谢您的诚实反馈！':'感谢您的参与，您的意见对产品改进很重要！';
-  const tips=[];
+  var ov=elderSc.overall;
+  var re2=document.getElementById('el_re');
+  var rt=document.getElementById('el_rt');
+  var rp=document.getElementById('el_rp');
+  if(re2)re2.textContent=ov==='happy'?'😊':ov==='ok'?'😐':'😞';
+  if(rt)rt.textContent=ov==='happy'?'您对这款食品评价很好！感谢参与。':ov==='ok'?'您觉得这款食品一般，感谢诚实反馈！':'感谢参与，您的意见对改进产品很重要！';
+  var tips=[];
   if(elderSc.taste==='sad')tips.push('味道方面还需改进');
   if(elderSc.texture==='sad')tips.push('口感可以更软糯一些');
   if(elderSc.saltiness==='sad')tips.push('咸淡需要调整');
-  document.getElementById('el_reportTips').innerHTML=tips.length?tips.map(t=>`<div style="font-size:16px;color:#555;padding:6px 0;border-bottom:1px solid #f0f0f0;">📌 ${t}</div>`).join(''):`<div style="font-size:16px;color:#2a9a2a;">✅ 各方面评价都不错！</div>`;
+  if(rp)rp.innerHTML=tips.length
+    ?tips.map(function(t){return '<div style="font-size:16px;color:#555;padding:6px 0;border-bottom:1px solid #f0f0f0;">📌 '+t+'</div>';}).join('')
+    :'<div style="font-size:16px;color:#2a9a2a;">✅ 各方面评价都不错！</div>';
 }
 
-// ════════════ 教师端 ════════════
+// 兼容旧调用
+function elderSubmit(){return elSubmit();}
+function elderSelHealth(el,val){return elH(el,val);}
+
+// 兼容旧函数名（保留）
+function elderSubmit(){return elSubmit();}
+function elderSelHealth(el,val){return elSelH(el,val);}
+
+
+// ════════ 模块E：PCA分析 ════════
+var PCA_SENSORS2=[
+  {id:'AAE',label:'鲜味 AAE'},{id:'C00',label:'苦味 C00'},
+  {id:'CA0',label:'酸味 CA0'},{id:'AE1',label:'涩味 AE1'},
+  {id:'CT0',label:'咸味 CT0'},{id:'Richness',label:'鲜回味'},
+  {id:'AftC00',label:'苦回味'},{id:'AftAE1',label:'涩回味'},
+];
+var PCA_COLORS2=['#f5c842','#7bc32a','#7ab8f5','#f5a020','#e05a5a','#c87af5','#f57ac8','#7af5e0'];
+var pcaSamples=[],pcaResult2=null,pcaMainChart=null;
+
+function pcaTab(n){
+  for(var i=0;i<4;i++){
+    var t=document.getElementById('ptb'+i);var p=document.getElementById('pcp'+i);
+    if(t)t.classList.toggle('on',i===n);if(p)p.classList.toggle('on',i===n);
+  }
+}
+function pcaInitUI(){
+  var el=document.getElementById('pcaSensorOrder');
+  if(el)el.innerHTML=PCA_SENSORS2.map(function(s,i){return '<span style="background:#1a1a1a;border:1px solid #333;border-radius:6px;padding:3px 10px;font-size:11px;color:var(--gold);">'+(i+1)+'. '+s.label+'</span>';}).join('');
+}
+function pcaParsePaste(){
+  var raw=document.getElementById('pcaPasteData').value.trim();
+  if(!raw){alert('请先粘贴数据');return;}
+  var lines=raw.split('\n').filter(function(l){return l.trim();});
+  var added=0;
+  lines.forEach(function(line,idx){
+    var parts=line.trim().split(/[\t,;，]+/);if(parts.length<2)return;
+    var name,values;
+    if(isNaN(parseFloat(parts[0]))){name=parts[0].trim();values=parts.slice(1).map(function(v){return parseFloat(v)||0;});}
+    else{name='样品'+(idx+1);values=parts.map(function(v){return parseFloat(v)||0;});}
+    if(values.length>=2){pcaSamples.push({name:name,group:name,values:values});added++;}
+  });
+  pcaPreview();if(added>0)alert('导入'+added+'个样品');
+}
+function pcaLoadDemo(){
+  pcaSamples=[
+    {name:'国圣原配S-01',group:'S-01',values:[2.1,-0.5,0.3,1.2,0.8,1.5,0.2,-0.3]},
+    {name:'国圣原配S-01',group:'S-01',values:[1.8,-0.3,0.4,1.0,0.7,1.3,0.1,-0.2]},
+    {name:'国圣原配S-01',group:'S-01',values:[2.0,-0.4,0.35,1.1,0.75,1.4,0.15,-0.25]},
+    {name:'良品铺子S-02',group:'S-02',values:[-1.2,2.3,-0.8,2.1,-0.5,0.3,1.8,2.2]},
+    {name:'良品铺子S-02',group:'S-02',values:[-1.0,2.1,-0.9,1.9,-0.4,0.2,1.7,2.0]},
+    {name:'良品铺子S-02',group:'S-02',values:[-1.1,2.2,-0.85,2.0,-0.45,0.25,1.75,2.1]},
+    {name:'三只松鼠S-03',group:'S-03',values:[0.5,0.8,1.5,-0.3,1.2,-1.0,0.9,0.4]},
+    {name:'三只松鼠S-03',group:'S-03',values:[0.6,0.9,1.4,-0.2,1.1,-0.9,0.8,0.5]},
+    {name:'国圣新配S-04',group:'S-04',values:[2.8,-0.4,0.4,1.3,0.9,1.8,0.3,-0.2]},
+    {name:'国圣新配S-04',group:'S-04',values:[2.6,-0.3,0.5,1.2,0.85,1.7,0.25,-0.15]},
+  ];
+  pcaPreview();
+}
+function pcaClearData(){pcaSamples=[];pcaResult2=null;document.getElementById('pcaPreviewCard').style.display='none';document.getElementById('pcaPasteData').value='';}
+function pcaPreview(){
+  if(!pcaSamples.length)return;
+  document.getElementById('pcaPreviewCard').style.display='block';
+  var groups=[...new Set(pcaSamples.map(function(s){return s.group;}))];
+  var cm={};groups.forEach(function(g,i){cm[g]=PCA_COLORS2[i%PCA_COLORS2.length];});
+  var html='<div style="font-size:12px;color:#888;margin-bottom:8px;">共'+pcaSamples.length+'个样品，'+groups.length+'组</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">';
+  groups.forEach(function(g){var c=pcaSamples.filter(function(s){return s.group===g;}).length;html+='<span style="padding:3px 10px;border-radius:10px;background:'+cm[g]+'22;border:1px solid '+cm[g]+'66;color:'+cm[g]+';font-size:11px;font-weight:600;">'+g+' ('+c+'个)</span>';});
+  html+='</div>';
+  document.getElementById('pcaDataPreview').innerHTML=html;
+}
+function pcaRun(){
+  if(pcaSamples.length<2){alert('至少需要2个样品');return;}
+  var maxD=Math.max.apply(null,pcaSamples.map(function(s){return s.values.length;}));
+  var X=pcaSamples.map(function(s){var v=s.values.slice();while(v.length<maxD)v.push(0);return v;});
+  var n=X.length,p=maxD;
+  var mu=Array(p).fill(0),sg=Array(p).fill(1);
+  for(var j=0;j<p;j++){mu[j]=X.reduce(function(s,r){return s+r[j];},0)/n;sg[j]=Math.sqrt(X.reduce(function(s,r){return s+Math.pow(r[j]-mu[j],2);},0)/n)||1;}
+  var Xn=X.map(function(row){return row.map(function(v,j){return (v-mu[j])/sg[j];});});
+  var cov=[];for(var i=0;i<p;i++){cov.push([]);for(var j2=0;j2<p;j2++)cov[i].push(Xn.reduce(function(s,r){return s+r[i]*r[j2];},0)/(n-1));}
+  function pIter(mat){var sz=mat.length;var v=Array(sz).fill(0).map(function(_,k){return k===0?1:0;});for(var it=0;it<200;it++){var nv=Array(sz).fill(0);for(var a=0;a<sz;a++)for(var b=0;b<sz;b++)nv[a]+=mat[a][b]*v[b];var nm=Math.sqrt(nv.reduce(function(s,x){return s+x*x;},0));if(nm<1e-10)break;v=nv.map(function(x){return x/nm;});}var ev=v.reduce(function(s,vi,i){return s+vi*mat[i].reduce(function(ss,mij,j){return ss+mij*v[j];},0);},0);return{vector:v,value:Math.abs(ev)};}
+  var pc1=pIter(cov);
+  var cov2=cov.map(function(row,i){return row.map(function(v,j){return v-pc1.value*pc1.vector[i]*pc1.vector[j];});});
+  var pc2=pIter(cov2);
+  var tv=cov.reduce(function(s,row,i){return s+row[i];},0);
+  var s1=Xn.map(function(row){return row.reduce(function(s,v,j){return s+v*pc1.vector[j];},0);});
+  var s2=Xn.map(function(row){return row.reduce(function(s,v,j){return s+v*pc2.vector[j];},0);});
+  pcaResult2={scores:pcaSamples.map(function(s,i){return {name:s.name,group:s.group,pc1:s1[i],pc2:s2[i]};}),l1:pc1.vector,l2:pc2.vector,v1:pc1.value/tv,v2:pc2.value/tv,sn:PCA_SENSORS2.slice(0,p).map(function(s){return s.label;})};
+  pcaChart2();pcaTables();pcaReport2();pcaTab(1);
+}
+function pcaEllipse2(xs,ys){
+  var n=xs.length;if(n<3)return null;
+  var mx=xs.reduce(function(a,b){return a+b;},0)/n,my=ys.reduce(function(a,b){return a+b;},0)/n;
+  var sxx=xs.reduce(function(a,x){return a+Math.pow(x-mx,2);},0)/(n-1);
+  var syy=ys.reduce(function(a,y){return a+Math.pow(y-my,2);},0)/(n-1);
+  var sxy=xs.reduce(function(a,x,i){return a+(x-mx)*(ys[i]-my);},0)/(n-1);
+  var sc=Math.sqrt(5.991),disc=Math.sqrt(Math.pow((sxx-syy)/2,2)+sxy*sxy);
+  var a=Math.sqrt(Math.max(0,(sxx+syy)/2+disc)),b=Math.sqrt(Math.max(0,(sxx+syy)/2-disc));
+  var theta=Math.atan2(2*sxy,sxx-syy)/2;
+  var pts=[];for(var t=0;t<=360;t+=5){var r=t*Math.PI/180;var ex=sc*a*Math.cos(r),ey=sc*b*Math.sin(r);pts.push({x:mx+ex*Math.cos(theta)-ey*Math.sin(theta),y:my+ex*Math.sin(theta)+ey*Math.cos(theta)});}
+  return pts;
+}
+function pcaChart2(){
+  if(!pcaResult2)return;
+  var R=pcaResult2,groups=[...new Set(R.scores.map(function(s){return s.group;}))];
+  var cm={};groups.forEach(function(g,i){cm[g]=PCA_COLORS2[i%PCA_COLORS2.length];});
+  var showE=document.getElementById('pcaEllipse')?.value==='yes';
+  var title=document.getElementById('pcaTitle')?.value||'PCA分析图';
+  var ds=[];
+  groups.forEach(function(g){
+    var pts=R.scores.filter(function(s){return s.group===g;});var color=cm[g];
+    ds.push({label:g,data:pts.map(function(p){return {x:p.pc1,y:p.pc2,label:p.name};}),backgroundColor:color+'cc',borderColor:color,borderWidth:2,pointRadius:7,pointHoverRadius:10,type:'scatter'});
+    if(showE&&pts.length>=3){var ep=pcaEllipse2(pts.map(function(p){return p.pc1;}),pts.map(function(p){return p.pc2;}));if(ep)ds.push({label:g+'_e',data:ep,backgroundColor:color+'22',borderColor:color+'77',borderWidth:1.5,pointRadius:0,showLine:true,fill:true,type:'line',tension:0.4});}
+  });
+  var ctx=document.getElementById('pcaMainChart').getContext('2d');
+  if(pcaMainChart)pcaMainChart.destroy();
+  pcaMainChart=new Chart(ctx,{type:'scatter',data:{datasets:ds},options:{responsive:true,plugins:{title:{display:true,text:title,color:'#f5c842',font:{size:13,weight:'bold'}},legend:{display:true,labels:{color:'#ccc',font:{size:10},filter:function(item){return !item.text.includes('_e');}}},tooltip:{callbacks:{label:function(ctx){var d=ctx.raw;return(d.label||ctx.dataset.label)+': ('+d.x?.toFixed(3)+', '+d.y?.toFixed(3)+')';}}}},scales:{x:{title:{display:true,text:'PC1 ('+(R.v1*100).toFixed(1)+'%)',color:'#888'},grid:{color:'#1a1a1a'},ticks:{color:'#666'}},y:{title:{display:true,text:'PC2 ('+(R.v2*100).toFixed(1)+'%)',color:'#888'},grid:{color:'#1a1a1a'},ticks:{color:'#666'}}}}});
+  var tot=((R.v1+R.v2)*100).toFixed(1),qc=parseFloat(tot)>85?'var(--green)':parseFloat(tot)>70?'var(--gold)':'var(--red)';
+  document.getElementById('pcaQuality').innerHTML='<div style="display:flex;gap:7px;flex-wrap:wrap;font-size:11px;"><span style="background:#1a1a1a;padding:3px 9px;border-radius:7px;color:var(--gold);">PC1: '+(R.v1*100).toFixed(1)+'%</span><span style="background:#1a1a1a;padding:3px 9px;border-radius:7px;color:var(--green);">PC2: '+(R.v2*100).toFixed(1)+'%</span><span style="background:#1a1a1a;padding:3px 9px;border-radius:7px;color:'+qc+';">累计: '+tot+'%</span></div>';
+}
+function pcaTables(){
+  if(!pcaResult2)return;
+  var R=pcaResult2,th='background:#1a1a1a;color:var(--gold);padding:5px 7px;border:1px solid #2a2a2a;',td='padding:4px 7px;border:1px solid #2a2a2a;color:#ccc;text-align:center;';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:11px;"><tr><th style="'+th+'">样品名</th><th style="'+th+'">分组</th><th style="'+th+'">PC1</th><th style="'+th+'">PC2</th></tr>';
+  R.scores.forEach(function(s){h+='<tr><td style="'+td+'">'+s.name+'</td><td style="'+td+'">'+s.group+'</td><td style="'+td+'">'+s.pc1.toFixed(4)+'</td><td style="'+td+'">'+s.pc2.toFixed(4)+'</td></tr>';});
+  document.getElementById('pcaScoreTable').innerHTML=h+'</table>';
+  var lh='<table style="width:100%;border-collapse:collapse;font-size:11px;"><tr><th style="'+th+'">传感器</th><th style="'+th+'">PC1载荷</th><th style="'+th+'">PC2载荷</th><th style="'+th+'">贡献方向</th></tr>';
+  R.sn.forEach(function(name,i){var l1=R.l1[i]||0,l2=R.l2[i]||0,dir=l1>0.3?'正向主导':l1<-0.3?'负向主导':'较小',dc=l1>0.3?'var(--green)':l1<-0.3?'var(--red)':'var(--muted)';lh+='<tr><td style="'+td+';color:var(--gold)">'+name+'</td><td style="'+td+'">'+l1.toFixed(4)+'</td><td style="'+td+'">'+l2.toFixed(4)+'</td><td style="'+td+';color:'+dc+'">'+dir+'</td></tr>';});
+  document.getElementById('pcaLoadingTable').innerHTML=lh+'</table>';
+}
+function pcaReport2(){
+  if(!pcaResult2)return;
+  var R=pcaResult2,groups=[...new Set(R.scores.map(function(s){return s.group;}))];
+  var tot=((R.v1+R.v2)*100).toFixed(1),q=parseFloat(tot)>85?'极高（推荐论文）':parseFloat(tot)>70?'良好':'一般';
+  var mx=R.l1.reduce(function(m,v,i){return Math.abs(v)>Math.abs(R.l1[m])?i:m;},0);
+  var cents=groups.map(function(g){var pts=R.scores.filter(function(s){return s.group===g;});return {g:g,x:pts.reduce(function(a,p){return a+p.pc1;},0)/pts.length,y:pts.reduce(function(a,p){return a+p.pc2;},0)/pts.length};});
+  var maxD=0,minD=Infinity,fp=['',''],np=['',''];
+  for(var i=0;i<cents.length;i++)for(var j=i+1;j<cents.length;j++){var d=Math.sqrt(Math.pow(cents[i].x-cents[j].x,2)+Math.pow(cents[i].y-cents[j].y,2));if(d>maxD){maxD=d;fp=[cents[i].g,cents[j].g];}if(d<minD){minD=d;np=[cents[i].g,cents[j].g];}}
+  var s='background:#001a0a;border:1px solid #1a4a1a;border-radius:10px;padding:12px;margin-bottom:8px;',t='font-size:12px;font-weight:700;color:var(--green);margin-bottom:7px;',it='font-size:12px;color:#c0d0c0;padding:3px 0;border-bottom:1px solid #0d2a1a;line-height:1.6;';
+  document.getElementById('pcaAutoReport').innerHTML=
+    '<div style="'+s+'"><div style="'+t+'">图质量</div><div style="'+it+'">累计贡献: <strong style="color:var(--gold)">'+tot+'%</strong>，代表性'+q+'</div></div>'
+    +'<div style="'+s+'"><div style="'+t+'">样品分布</div><div style="'+it+'">共'+groups.length+'组，'+R.scores.length+'个测定点</div>'
+    +(groups.length>=2?'<div style="'+it+'">差异最大: <strong style="color:var(--gold)">'+fp[0]+'</strong> vs <strong style="color:var(--gold)">'+fp[1]+'</strong></div>':'')
+    +(groups.length>=3?'<div style="'+it+'">最相似: <strong style="color:var(--green)">'+np[0]+'</strong> vs '+np[1]+'</div>':'')+'</div>'
+    +'<div style="'+s+'"><div style="'+t+'">主要区分传感器</div><div style="'+it+'">PC1贡献最大: <strong style="color:var(--gold)">'+R.sn[mx]+'</strong>（载荷'+R.l1[mx].toFixed(3)+'）</div></div>'
+    +'<div style="'+s+'"><div style="'+t+'">置信椭圆说明</div><div style="'+it+'">不重叠→风味有显著差异</div><div style="'+it+'">部分重叠→差异不显著</div><div style="'+it+'">需≥3个平行样才能绘制</div></div>';
+}
+async function pcaAI(){
+  if(!pcaResult2){alert('请先运行PCA分析');return;}
+  var btn=document.getElementById('pcaAIBtn');btn.disabled=true;btn.textContent='AI分析中...';
+  var R=pcaResult2,groups=[...new Set(R.scores.map(function(s){return s.group;}))];
+  var cents=groups.map(function(g){var pts=R.scores.filter(function(s){return s.group===g;});return g+': PC1='+(pts.reduce(function(a,p){return a+p.pc1;},0)/pts.length).toFixed(3)+', PC2='+(pts.reduce(function(a,p){return a+p.pc2;},0)/pts.length).toFixed(3);});
+  var prompt='请解读Insent电子舌PCA分析结果（300字内，中文）：\nPC1: '+(R.v1*100).toFixed(1)+'%, PC2: '+(R.v2*100).toFixed(1)+'%, 累计: '+((R.v1+R.v2)*100).toFixed(1)+'%\n传感器载荷(PC1):\n'+R.sn.map(function(n,i){return n+': '+(R.l1[i]||0).toFixed(3);}).join('\n')+'\n各组质心:\n'+cents.join('\n')+'\n请给出：1.图代表性 2.风味差异特征 3.主要区分传感器 4.产品改进建议';
+  try{var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});var data=await res.json();var el=document.getElementById('pcaAIResult');el.textContent=data.content?.[0]?.text||'获取失败';el.style.display='block';}catch(e){var el=document.getElementById('pcaAIResult');el.textContent='网络错误：'+e.message;el.style.display='block';}
+  btn.disabled=false;btn.textContent='生成AI解读';
+}
+function pcaDownload(){if(!pcaMainChart){alert('请先生成PCA图');return;}var a=document.createElement('a');a.href=pcaMainChart.toBase64Image();a.download='PCA图_'+new Date().toLocaleDateString('zh-CN')+'.png';a.click();}
+
 function tUnlock(){if(document.getElementById('t_pwd').value===TEACHER_PWD){document.getElementById('t_lock').style.display='none';document.getElementById('t_dash').style.display='block';tRefresh();}else alert('密码错误');}
 function tRefresh(){
   let all=[];
