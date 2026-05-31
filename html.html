@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>食品感知AI平台 · 莆田学院</title>
+<!-- 微信云开发 Web SDK -->
+<!-- ✅ 方案1：国内稳定的 jsdelivr CDN（推荐） -->
+<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@2.9.0/dist/index.umd.js"></script>
+
+<!-- 备选：如果上方链接不可用，任选一个替换尝试 -->
+<!-- ✅ 备选2：官网最新稳定版（备用） -->
+<!-- <script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script> -->
+<!-- ✅ 备选3：国内 Gitee 镜像（备用） -->
+<!-- <script src="https://gcore.jsdelivr.net/npm/@cloudbase/js-sdk@2.9.0/dist/index.umd.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--gold:#f5c842;--gold2:#c8922a;--green:#7bc32a;--red:#e05a5a;--blue:#7ab8f5;--bg:#0a0a0a;--bg1:#111;--bg2:#141414;--bg3:#1e1e1e;--border:#2a2a2a;--text:#f0f0f0;--muted:#888;--dim:#444;}
+body{font-family:'PingFang SC',sans-serif;background:var(--bg);color:var(--text);}
+#home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.home-logo{font-size:48px;margin-bottom:12px;}
+.home-title{font-size:22px;font-weight:700;color:var(--gold);text-align:center;cursor:pointer;}
+.home-sub{font-size:12px;color:var(--dim);margin-bottom:28px;}
+.module-grid{display:flex;flex-direction:column;gap:12px;width:100%;max-width:400px;}
+.mod-card{border-radius:14px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;gap:16px;border:2px solid transparent;transition:transform .2s;}
+.mod-card:hover{transform:translateY(-2px);}
+.mod-icon{font-size:36px;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.mod-name{font-size:16px;font-weight:700;margin-bottom:3px;}
+.mod-desc{font-size:11px;opacity:.8;}
+.mod-sensory{background:#1a1200;border-color:#c8922a55;}
+.mod-sensory .mod-icon{background:#c8922a22;}.mod-sensory .mod-name{color:var(--gold);}
+.mod-etongue{background:#001a0a;border-color:#7bc32a55;}
+.mod-etongue .mod-icon{background:#7bc32a22;}.mod-etongue .mod-name{color:var(--green);}
+.mod-elder{background:#1a0f00;border-color:#f5a02055;}
+.mod-elder .mod-icon{background:#f5a02022;}.mod-elder .mod-name{color:#f5a020;}
+.mod-teacher{background:#001020;border-color:#7ab8f555;}
+.mod-teacher .mod-icon{background:#7ab8f522;}.mod-teacher .mod-name{color:var(--blue);}
+.home-footer{font-size:10px;color:var(--dim);margin-top:20px;text-align:center;}
+.app{display:none;}
+.hdr{background:var(--bg1);border-bottom:2px solid var(--gold2);padding:11px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.hdr-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--gold2),var(--gold));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.hdr h1{font-size:15px;font-weight:700;color:var(--gold);}
+.hdr p{font-size:10px;color:var(--dim);}
+.hdr-back{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid #333;background:none;color:var(--muted);font-size:11px;cursor:pointer;}
+.main{padding:14px;max-width:720px;margin:0 auto;}
+.panel{display:none;}.panel.on{display:block;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.ct{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+label.fl{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;}
+input,select,textarea{width:100%;background:#0d0d0d;border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;}
+.btn{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;width:100%;justify-content:center;}
+.btn-g{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000;}
+.btn-o{background:transparent;border:1px solid #333;color:var(--muted);}
+.btn-row{display:flex;gap:8px;margin-top:8px;}
+.alert{padding:10px 13px;border-radius:9px;font-size:12px;margin-bottom:12px;display:flex;gap:8px;align-items:center;}
+.al-y{background:#1a1200;border:1px solid #4a3000;color:var(--gold);}
+.al-g{background:#001a00;border:1px solid #1a4a1a;color:#a0f5a0;}
+.al-r{background:#1a0000;border:1px solid #5a1a1a;color:#f5a0a0;}
+.sample-nav{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.sn-btn{padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;cursor:pointer;}
+.sn-btn.active{border-color:var(--gold);background:#1a1200;color:var(--gold);}
+.sn-btn.done{border-color:var(--green);background:#001500;color:var(--green);}
+.sample-hint{background:#1a1200;border:1px solid #3a2800;border-radius:10px;padding:10px;margin-bottom:12px;text-align:center;}
+.sh-code{font-size:26px;font-weight:700;color:var(--gold);}
+.score-item{padding:9px 0;border-bottom:1px solid #1a1a1a;}
+.score-row{display:flex;align-items:center;gap:8px;}
+.score-name{font-size:12px;font-weight:600;width:72px;}
+input[type=range]{flex:1;accent-color:var(--gold2);}
+.score-num{font-size:15px;font-weight:700;color:var(--gold);width:24px;text-align:center;}
+.buy-opts{display:flex;gap:8px;margin-top:6px;}
+.buy-btn{flex:1;padding:10px 6px;border-radius:9px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;text-align:center;}
+.buy-emoji{font-size:24px;display:block;}
+.buy-label{font-size:11px;font-weight:600;color:var(--muted);}
+.buy-btn.sel-yes{border-color:var(--green);background:#001500;}
+.buy-btn.sel-yes .buy-label{color:var(--green);}
+.buy-btn.sel-maybe{border-color:var(--gold);background:#1a1200;}
+.buy-btn.sel-maybe .buy-label{color:var(--gold);}
+.buy-btn.sel-no{border-color:var(--red);background:#1a0000;}
+.buy-btn.sel-no .buy-label{color:var(--red);}
+.save-bar{padding:9px;border-radius:7px;font-size:11px;margin-top:8px;display:none;text-align:center;}
+.sv-ok{background:#001500;border:1px solid #1a5a1a;color:var(--green);}
+.sv-er{background:#1a0000;border:1px solid #5a1a1a;color:var(--red);}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center;}
+.stat-n{font-size:22px;font-weight:700;color:var(--gold);}
+.cw{max-width:300px;margin:0 auto;}
+.legend{display:flex;justify-content:center;gap:14px;margin-top:6px;font-size:10px;}
+.ldot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px;}
+.srow{display:flex;align-items:center;gap:8px;padding:7px 0;}
+.sname{font-size:12px;color:#ccc;width:60px;}
+.sval{font-size:13px;font-weight:700;color:var(--gold);width:22px;}
+.rec{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;}
+.rec-q{font-size:11px;font-weight:600;color:var(--gold);}
+.badge{font-size:10px;padding:2px 7px;border-radius:8px;background:#0d2a00;color:var(--green);}
+</style>
+</head>
+<body>
+
+<div id="home">
+    <div class="home-logo">🍜</div>
+    <div class="home-title" onclick="titleClick()">食品感知AI研究平台</div>
+    <div class="home-sub">莆田学院 · 食品无损检测技术</div>
+    <div id="cloudStatus" class="alert al-y" style="margin-bottom: 16px;">⏳ 连接云服务中...</div>
+    <div class="module-grid">
+        <div class="mod-card mod-sensory" onclick="openApp('sensory')"><div class="mod-icon">📋</div><div><div class="mod-name">盲测感官评价</div><div class="mod-desc">品尝样品 · 打分评价 · 购买意愿</div></div></div>
+        <div class="mod-card mod-etongue" onclick="openApp('etongue')"><div class="mod-icon">👅</div><div><div class="mod-name">电子舌AI教学</div><div class="mod-desc">感官vs仪器对比 · 雷达图分析</div></div></div>
+        <div class="mod-card mod-elder" onclick="openApp('elder')"><div class="mod-icon">👴</div><div><div class="mod-name">长辈品尝评价</div><div class="mod-desc">大字体 · 表情评分 · 简单易用</div></div></div>
+        <div class="mod-card mod-teacher" onclick="openApp('teacher')"><div class="mod-icon">📊</div><div><div class="mod-name">教师数据中心</div><div class="mod-desc">查看全部数据 · 导出CSV</div></div></div>
+    </div>
+    <div class="home-footer">数据实时存储到云数据库 · 教师可一键导出</div>
+</div>
+
+<!-- 感官评价模块 -->
+<div class="app" id="appSensory">
+    <div class="hdr"><div class="hdr-icon">📋</div><div><h1>盲测感官评价</h1><p>莆田学院食品感知平台</p></div><button class="hdr-back" onclick="backHome()">⌂</button></div>
+    <div class="main">
+        <div class="panel on" id="ss0">
+            <div class="alert al-y"><span>📋</span><div>品尝的样品<strong>只有编号没有品牌</strong>，请凭真实感受评分</div></div>
+            <div class="card"><div class="ct">👤 基本信息</div>
+                <div style="margin-bottom:10px;"><label class="fl">学号 *</label><input id="s_id" placeholder="请输入学号"></div>
+                <div style="margin-bottom:10px;"><label class="fl">姓名 *</label><input id="s_name" placeholder="请输入姓名"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div><label class="fl">性别</label><select id="s_gender"><option>男</option><option>女</option></select></div>
+                    <div><label class="fl">年龄段</label><select id="s_age"><option>18-20</option><option>21-23</option><option>24+</option></select></div>
+                </div>
+            </div>
+            <button class="btn btn-g" onclick="sStartEval()">✓ 开始品尝评价</button>
+        </div>
+        <div class="panel" id="ss1">
+            <div class="sample-nav" id="s_nav"></div>
+            <div class="sample-hint"><div class="sh-code" id="s_code">S-01</div><div class="sh-tip">请品尝此样品后评分</div></div>
+            <div class="card">
+                <div class="score-item"><div class="score-row"><div class="score-name">鲜味</div><input type="range" min="1" max="9" value="5" id="sc_umami" oninput="sv('umami',this.value)"><div class="score-num" id="sv_umami">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">咸淡</div><input type="range" min="1" max="9" value="5" id="sc_salt" oninput="sv('salt',this.value)"><div class="score-num" id="sv_salt">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">辣味</div><input type="range" min="1" max="9" value="5" id="sc_spicy" oninput="sv('spicy',this.value)"><div class="score-num" id="sv_spicy">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">酸味</div><input type="range" min="1" max="9" value="5" id="sc_sour" oninput="sv('sour',this.value)"><div class="score-num" id="sv_sour">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">回味</div><input type="range" min="1" max="9" value="5" id="sc_after" oninput="sv('after',this.value)"><div class="score-num" id="sv_after">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">软硬</div><input type="range" min="1" max="9" value="5" id="sc_texture" oninput="sv('texture',this.value)"><div class="score-num" id="sv_texture">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">咀嚼感</div><input type="range" min="1" max="9" value="5" id="sc_chew" oninput="sv('chew',this.value)"><div class="score-num" id="sv_chew">5</div></div></div>
+                <div class="score-item"><div class="score-row"><div class="score-name">总体接受</div><input type="range" min="1" max="9" value="5" id="sc_overall" oninput="sv('overall',this.value)"><div class="score-num" id="sv_overall">5</div></div></div>
+                <div style="margin-top:12px;"><div style="font-size:12px;font-weight:600;">购买意愿</div><div class="buy-opts" id="s_buyOpts"><button class="buy-btn" onclick="sBuy(this,'yes')"><span class="buy-emoji">🛒</span><span class="buy-label">会买</span></button><button class="buy-btn" onclick="sBuy(this,'maybe')"><span class="buy-emoji">🤔</span><span class="buy-label">考虑</span></button><button class="buy-btn" onclick="sBuy(this,'no')"><span class="buy-emoji">❌</span><span class="buy-label">不买</span></button></div></div>
+                <div style="margin-top:10px;"><label class="fl">评价备注</label><textarea id="sc_comment" placeholder="例：鲜味足但偏咸..."></textarea></div>
+            </div>
+            <div class="btn-row"><button class="btn btn-o" onclick="sPrev()">← 上一个</button><button class="btn btn-g" onclick="sNext()">提交 →</button></div>
+            <div class="save-bar" id="s_saveSt"></div>
+        </div>
+        <div class="panel" id="ss2"><div style="text-align:center;padding:40px;"><div style="font-size:56px;">🎉</div><div style="font-size:20px;font-weight:700;color:var(--gold);">评价完成！</div><div class="done-sub" style="margin:12px 0;">数据已存入云端，谢谢参与</div><button class="btn btn-o" onclick="backHome()">返回首页</button></div></div>
+    </div>
+</div>
+
+<!-- 电子舌AI模块 -->
+<div class="app" id="appEtongue">
+    <div class="hdr"><div class="hdr-icon">👅</div><div><h1>电子舌AI教学</h1><p>感官vs仪器对比</p></div><button class="hdr-back" onclick="backHome()">⌂</button></div>
+    <div style="display:flex;gap:0;border-bottom:1px solid #2a2a2a;">
+        <button class="tab on" style="padding:10px 13px;background:none;border:none;color:var(--gold);border-bottom:2px solid var(--gold);" onclick="ego(0)">感官评分</button>
+        <button class="tab" style="padding:10px 13px;background:none;border:none;color:var(--dim);" onclick="ego(1)">仪器数据</button>
+        <button class="tab" style="padding:10px 13px;background:none;border:none;color:var(--dim);" onclick="ego(2)">对比雷达</button>
+    </div>
+    <div class="main">
+        <div class="panel on" id="ep0">
+            <div class="card"><div class="ct">👃 人工感官评分（1-9分）</div><div id="e_sliders"></div><button class="btn btn-g" onclick="ego(1)">下一步 →</button></div>
+        </div>
+        <div class="panel" id="ep1">
+            <div class="card"><div class="ct">📡 Insent传感器值</div>
+                <div style="margin-bottom:10px;"><label>AAE 鲜味</label><input id="e_aae" type="number" step="0.1" placeholder="例: 2.5"></div>
+                <div style="margin-bottom:10px;"><label>C00 苦味</label><input id="e_c00" type="number" step="0.1"></div>
+                <div style="margin-bottom:10px;"><label>CA0 酸味</label><input id="e_ca0" type="number" step="0.1"></div>
+                <div style="margin-bottom:10px;"><label>AE1 涩味</label><input id="e_ae1" type="number" step="0.1"></div>
+                <div style="margin-bottom:10px;"><label>CT0 咸味</label><input id="e_ct0" type="number" step="0.1"></div>
+                <button class="btn btn-g" onclick="eDoCompare()">生成对比图 →</button>
+            </div>
+        </div>
+        <div class="panel" id="ep2">
+            <div class="card"><div class="ct">📊 雷达对比图</div><div class="cw"><canvas id="e_radar" height="260"></canvas></div><div class="legend"><span><span class="ldot" style="background:var(--gold)"></span>人工感官</span><span><span class="ldot" style="background:var(--green)"></span>电子舌</span></div></div>
+            <div class="card"><div class="ct">💡 差异分析</div><div id="e_mmList"></div><button class="btn btn-g" style="margin-top:10px;" onclick="eSaveToLocal()">💾 保存本次对比记录</button><div class="save-bar" id="e_saveSt"></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- 长辈模块 -->
+<div class="app" id="appElder" style="background:#fff8f0;">
+    <div style="background:#fff3e6;border-bottom:3px solid #c8600a;padding:14px 18px;display:flex;"><div style="width:44px;height:44px;background:#c8600a;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;">🍜</div><div style="flex:1;margin-left:12px;"><div style="font-size:20px;font-weight:700;color:#c8600a;">长辈品尝评价</div><div style="font-size:12px;color:#888;">莆田学院食品研究</div></div><button onclick="backHome()" style="padding:8px 16px;border:2px solid #c8600a;background:none;border-radius:8px;">返回</button></div>
+    <div style="padding:20px;max-width:500px;margin:0 auto;" id="elderContent"></div>
+</div>
+
+<!-- 教师端 -->
+<div class="app" id="appTeacher">
+    <div class="hdr"><div class="hdr-icon" style="background:linear-gradient(135deg,#1a7a1a,var(--green));">📊</div><div><h1>教师数据中心</h1><p>查看全部实验数据</p></div><button class="hdr-back" onclick="backHome()">⌂</button></div>
+    <div class="main">
+        <div class="card"><div class="ct">🔑 教师验证</div><div style="display:flex;gap:8px;"><input type="password" id="t_pwd" placeholder="教师密码" style="flex:1;"><button class="btn btn-g" onclick="tUnlock()" style="width:auto;">验证</button></div></div>
+        <div id="t_dash" style="display:none;">
+            <div class="stats-row" id="t_stats"></div>
+            <div class="btn-row"><button class="btn btn-g" onclick="tLoadData()">☁️ 加载全部云端数据</button><button class="btn btn-o" onclick="tExportCSV()">📥 导出CSV</button></div>
+            <div class="card"><div class="ct">📋 最新记录</div><div id="t_recs"></div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== 云开发初始化（使用 Web SDK）====================
+    const ENV_ID = 'cloud1-4gpqll8b152f36b5';
+    let cloudApp = null;
+    let cloudReady = false;
+    let loginPromise = null;
+
+    function initCloud() {
+        const statusDiv = document.getElementById('cloudStatus');
+        if (!window.cloudbase) {
+            statusDiv.innerHTML = '❌ 云开发SDK加载失败，请检查网络';
+            statusDiv.className = 'alert al-r';
+            return;
+        }
+        cloudApp = window.cloudbase.init({ env: ENV_ID, region: 'ap-shanghai' });
+        const auth = cloudApp.auth();
+        loginPromise = auth.anonymousAuthProvider().signIn().then(() => {
+            cloudReady = true;
+            statusDiv.innerHTML = '✅ 云服务已就绪，数据将自动保存到云端';
+            statusDiv.className = 'alert al-g';
+            console.log('云开发匿名登录成功');
+        }).catch(err => {
+            console.error('登录失败', err);
+            statusDiv.innerHTML = '⚠️ 云服务连接失败，数据将保存到本地，请联系老师';
+            statusDiv.className = 'alert al-r';
+            cloudReady = false;
+        });
+        return loginPromise;
+    }
+
+    // 调用云函数（统一封装）
+    async function callCloudFunction(data) {
+        if (!cloudReady) {
+            // 等待登录完成
+            if (loginPromise) await loginPromise;
+            if (!cloudReady) {
+                console.warn('云未就绪，数据仅存本地');
+                return null;
+            }
+        }
+        try {
+            const result = await cloudApp.callFunction({
+                name: 'saveRecord',
+                data: data
+            });
+            return result.result;
+        } catch (err) {
+            console.error('云函数调用失败', err);
+            return null;
+        }
+    }
+
+    // 保存数据（支持云+本地双重备份）
+    async function saveDataToCloud(collectionName, data) {
+        // 本地备份
+        let backup = JSON.parse(localStorage.getItem(collectionName + '_backup') || '[]');
+        backup.push({ ...data, localTime: Date.now() });
+        if (backup.length > 200) backup = backup.slice(-200);
+        localStorage.setItem(collectionName + '_backup', JSON.stringify(backup));
+
+        // 云端存储：调用云函数，action='add'
+        const res = await callCloudFunction({ action: 'add', data: data });
+        if (res && res.ok) {
+            console.log('云端保存成功, id:', res.id);
+            return true;
+        } else {
+            console.warn('云端保存失败，已存本地');
+            return false;
+        }
+    }
+
+    // 加载所有数据（本地+云端）
+    async function loadAllFromCloud() {
+        let allData = [];
+        // 读取本地备份
+        let sensoryBackup = JSON.parse(localStorage.getItem('food_sensory_backup') || '[]');
+        let etongueBackup = JSON.parse(localStorage.getItem('etongue_data_backup') || '[]');
+        let elderBackup = JSON.parse(localStorage.getItem('elder_data_backup') || '[]');
+        allData.push(...sensoryBackup, ...etongueBackup, ...elderBackup);
+
+        // 从云端获取
+        const result = await callCloudFunction({ action: 'getAll' });
+        if (result && result.records) {
+            const cloudRecords = result.records;
+            // 去重（基于时间+学号+样品）
+            const keySet = new Set(allData.map(d => `${d.stuId}_${d.sample}_${d.time}`));
+            for (let rec of cloudRecords) {
+                const key = `${rec.stuId}_${rec.sample}_${rec.time}`;
+                if (!keySet.has(key)) {
+                    allData.push(rec);
+                    keySet.add(key);
+                }
+            }
+        }
+        return allData;
+    }
+
+    // ==================== 页面切换 ====================
+    function openApp(name) {
+        document.getElementById('home').style.display = 'none';
+        document.querySelectorAll('.app').forEach(a => a.style.display = 'none');
+        document.getElementById('app' + name.charAt(0).toUpperCase() + name.slice(1)).style.display = 'block';
+        if (name === 'sensory') sInit();
+        if (name === 'etongue') eInit();
+        if (name === 'elder') elderInit();
+    }
+    function backHome() {
+        document.querySelectorAll('.app').forEach(a => a.style.display = 'none');
+        document.getElementById('home').style.display = 'flex';
+    }
+
+    // ==================== 感官评价 ====================
+    let SAMPLES = ['S-01', 'S-02', 'S-03', 'S-04'];
+    let sCurIdx = 0, sScores = {}, sBuyChoice = {};
+
+    function sInit() { sCurIdx = 0; sScores = {}; sBuyChoice = {}; sRenderNav(); sLoadSample(0); }
+    function sRenderNav() {
+        let html = SAMPLES.map((s, i) => `<button class="sn-btn ${i === sCurIdx ? 'active' : ''} ${sScores[s] ? 'done' : ''}" onclick="sJump(${i})">${s}</button>`).join('');
+        document.getElementById('s_nav').innerHTML = html;
+    }
+    function sLoadSample(idx) {
+        let s = SAMPLES[idx];
+        document.getElementById('s_code').textContent = s;
+        let saved = sScores[s];
+        ['umami', 'salt', 'spicy', 'sour', 'after', 'texture', 'chew', 'overall'].forEach(d => {
+            let v = saved ? saved[d] : 5;
+            let el = document.getElementById('sc_' + d);
+            if (el) { el.value = v; sv(d, v); }
+        });
+        if (sBuyChoice[s]) {
+            document.querySelectorAll('.buy-btn').forEach(b => b.classList.remove('sel-yes', 'sel-maybe', 'sel-no'));
+            let map = { yes: 'sel-yes', maybe: 'sel-maybe', no: 'sel-no' };
+            document.querySelectorAll('.buy-btn').forEach(b => {
+                if (b.querySelector('.buy-label').textContent === (sBuyChoice[s] === 'yes' ? '会买' : sBuyChoice[s] === 'maybe' ? '考虑' : '不买'))
+                    b.classList.add(map[sBuyChoice[s]]);
+            });
+        }
+        document.getElementById('sc_comment').value = saved ? saved.comment || '' : '';
+    }
+    function sv(d, v) { let el = document.getElementById('sv_' + d); if (el) el.textContent = v; }
+    function sBuy(el, val) {
+        document.querySelectorAll('.buy-btn').forEach(b => b.classList.remove('sel-yes', 'sel-maybe', 'sel-no'));
+        el.classList.add({ yes: 'sel-yes', maybe: 'sel-maybe', no: 'sel-no' }[val]);
+        sBuyChoice[SAMPLES[sCurIdx]] = val;
+    }
+    function sJump(idx) { sCurIdx = idx; sRenderNav(); sLoadSample(idx); }
+    function sPrev() { if (sCurIdx > 0) { sCurIdx--; sRenderNav(); sLoadSample(sCurIdx); } }
+    async function sNext() {
+        let s = SAMPLES[sCurIdx];
+        if (!sBuyChoice[s]) { alert('请选择购买意愿'); return; }
+        let scores = {};
+        ['umami', 'salt', 'spicy', 'sour', 'after', 'texture', 'chew', 'overall'].forEach(k => { scores[k] = +document.getElementById('sc_' + k).value; });
+        scores.comment = document.getElementById('sc_comment').value;
+        scores.buy = sBuyChoice[s];
+        sScores[s] = scores;
+
+        let data = {
+            type: 'sensory',
+            time: new Date().toLocaleString('zh-CN'),
+            stuId: document.getElementById('s_id').value,
+            stuName: document.getElementById('s_name').value,
+            gender: document.getElementById('s_gender').value,
+            age: document.getElementById('s_age').value,
+            sample: s,
+            ...scores,
+            createTime: new Date().toISOString()
+        };
+        await saveDataToCloud('food_sensory', data);
+
+        let st = document.getElementById('s_saveSt');
+        st.className = 'save-bar sv-ok';
+        st.textContent = '✅ 已保存到云端';
+        st.style.display = 'block';
+        setTimeout(() => st.style.display = 'none', 1500);
+
+        if (sCurIdx < SAMPLES.length - 1) { sCurIdx++; sRenderNav(); sLoadSample(sCurIdx); window.scrollTo(0, 0); }
+        else { document.querySelectorAll('#appSensory .panel').forEach((p, i) => p.classList.toggle('on', i === 2)); }
+    }
+    function sStartEval() {
+        let id = document.getElementById('s_id').value.trim();
+        let name = document.getElementById('s_name').value.trim();
+        if (!id || !name) { alert('请填写学号和姓名'); return; }
+        document.querySelectorAll('#appSensory .panel').forEach((p, i) => p.classList.toggle('on', i === 1));
+        sInit();
+    }
+
+    // ==================== 电子舌模块 ====================
+    let eSc = { umami: 5, bitter: 5, sour: 5, astringent: 5, salty: 5 };
+    let eRadar = null;
+
+    function eInit() {
+        let html = ['umami', 'bitter', 'sour', 'astringent', 'salty'].map(d =>
+            `<div class="srow"><span class="sname">${d === 'umami' ? '鲜味' : d === 'bitter' ? '苦味' : d === 'sour' ? '酸味' : d === 'astringent' ? '涩味' : '咸味'}</span>
+             <input type="range" min="1" max="9" value="5" id="esl_${d}" oninput="eSc['${d}']=+this.value;document.getElementById('esv_${d}').textContent=this.value">
+             <span class="sval" id="esv_${d}">5</span></div>`
+        ).join('');
+        document.getElementById('e_sliders').innerHTML = html;
+    }
+    function ego(n) {
+        let panels = document.querySelectorAll('#appEtongue .panel');
+        let tabs = document.querySelectorAll('#appEtongue .tab');
+        panels.forEach((p, i) => p.classList.toggle('on', i === n));
+        tabs.forEach((t, i) => {
+            if (i === n) { t.style.color = 'var(--gold)'; t.style.borderBottom = '2px solid var(--gold)'; }
+            else { t.style.color = 'var(--dim)'; t.style.borderBottom = 'none'; }
+        });
+    }
+    function eDoCompare() {
+        let sensorVals = {
+            aae: parseFloat(document.getElementById('e_aae').value) || 0,
+            c00: parseFloat(document.getElementById('e_c00').value) || 0,
+            ca0: parseFloat(document.getElementById('e_ca0').value) || 0,
+            ae1: parseFloat(document.getElementById('e_ae1').value) || 0,
+            ct0: parseFloat(document.getElementById('e_ct0').value) || 0
+        };
+        let norm = v => Math.min(9, Math.max(1, 5 + (v / 10) * 4));
+        let sensorNorm = [norm(sensorVals.aae), norm(sensorVals.c00), norm(sensorVals.ca0), norm(sensorVals.ae1), norm(sensorVals.ct0)];
+        let sensoryVals = [eSc.umami, eSc.bitter, eSc.sour, eSc.astringent, eSc.salty];
+        let labels = ['鲜味', '苦味', '酸味', '涩味', '咸味'];
+
+        let ctx = document.getElementById('e_radar').getContext('2d');
+        if (eRadar) eRadar.destroy();
+        eRadar = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels, datasets: [
+                    { label: '人工感官', data: sensoryVals, borderColor: '#f5c842', backgroundColor: 'rgba(245,200,66,0.15)', pointBackgroundColor: '#f5c842', pointRadius: 4 },
+                    { label: '电子舌', data: sensorNorm, borderColor: '#7bc32a', backgroundColor: 'rgba(123,195,42,0.12)', pointBackgroundColor: '#7bc32a', pointRadius: 4 }
+                ]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { r: { min: 1, max: 9, ticks: { display: false }, grid: { color: '#2a2a2a' }, pointLabels: { color: '#ccc' } } } }
+        });
+
+        let diffHtml = '';
+        for (let i = 0; i < labels.length; i++) {
+            let diff = Math.abs(sensoryVals[i] - sensorNorm[i]);
+            if (diff > 1.5) {
+                diffHtml += `<div class="alert al-y" style="margin-top:5px;">⚠️ ${labels[i]}：感官 ${sensoryVals[i]}分 vs 仪器 ${sensorNorm[i].toFixed(1)}分，差异明显</div>`;
+            }
+        }
+        if (!diffHtml) diffHtml = '<div class="alert al-g">✓ 感官与仪器基本一致</div>';
+        document.getElementById('e_mmList').innerHTML = diffHtml;
+        window.lastCompareData = { sensoryVals, sensorNorm, labels, sensorVals, timestamp: new Date().toLocaleString() };
+    }
+    async function eSaveToLocal() {
+        if (!window.lastCompareData) { alert('请先生成对比图'); return; }
+        let data = {
+            type: 'etongue',
+            time: new Date().toLocaleString('zh-CN'),
+            sensory: window.lastCompareData.sensoryVals,
+            instrument: window.lastCompareData.sensorNorm,
+            rawInstrument: window.lastCompareData.sensorVals,
+            createTime: new Date().toISOString()
+        };
+        await saveDataToCloud('food_sensory', data);
+        let st = document.getElementById('e_saveSt');
+        st.className = 'save-bar sv-ok';
+        st.textContent = '✅ 对比记录已保存';
+        st.style.display = 'block';
+        setTimeout(() => st.style.display = 'none', 1500);
+    }
+
+    // ==================== 长辈模块 ====================
+    let elderData = {};
+    function elderInit() {
+        document.getElementById('elderContent').innerHTML = `
+            <div class="card" style="background:#fff;color:#333;"><div class="ct" style="color:#c8600a;">👤 基本信息</div>
+                <div style="margin-bottom:12px;"><label>编号/姓名</label><input id="e_id" style="background:#f0f0f0;color:#333;"></div>
+                <div style="margin-bottom:12px;"><label>年龄</label><select id="e_age" style="background:#f0f0f0;color:#333;"><option>60-70岁</option><option>70-80岁</option><option>80岁以上</option></select></div>
+                <button class="btn btn-g" style="background:#c8600a;color:#fff;" onclick="elderStep2()">下一步 →</button>
+            </div>`;
+    }
+    function elderStep2() {
+        elderData.id = document.getElementById('e_id').value;
+        elderData.age = document.getElementById('e_age').value;
+        document.getElementById('elderContent').innerHTML = `
+            <div class="card" style="background:#fff;color:#333;"><div class="ct" style="color:#c8600a;">🍜 品尝评价</div>
+                <div style="margin-bottom:12px;"><label>样品编号</label><input id="e_sample" style="background:#f0f0f0;color:#333;"></div>
+                <div style="margin-bottom:12px;"><label>总体评价</label>
+                    <div style="display:flex;gap:10px;"><button onclick="elderSubmit('非常好吃')" style="flex:1;padding:16px;background:#2a9a2a;color:#fff;border:none;border-radius:12px;font-size:18px;">😋 好吃</button>
+                    <button onclick="elderSubmit('一般')" style="flex:1;padding:16px;background:#f5a020;color:#fff;border:none;border-radius:12px;font-size:18px;">😐 一般</button>
+                    <button onclick="elderSubmit('不好吃')" style="flex:1;padding:16px;background:#e05a5a;color:#fff;border:none;border-radius:12px;font-size:18px;">😕 不好吃</button></div>
+                </div>
+            </div>`;
+    }
+    async function elderSubmit(rating) {
+        let data = {
+            type: 'elder',
+            time: new Date().toLocaleString('zh-CN'),
+            elderId: elderData.id,
+            elderAge: elderData.age,
+            sample: document.getElementById('e_sample').value,
+            rating: rating,
+            createTime: new Date().toISOString()
+        };
+        await saveDataToCloud('food_sensory', data);
+        document.getElementById('elderContent').innerHTML = `<div style="text-align:center;padding:40px;background:#fff;border-radius:20px;"><div style="font-size:56px;">🎉</div><div style="font-size:24px;font-weight:700;color:#c8600a;">感谢参与！</div><button class="btn btn-g" style="background:#c8600a;margin-top:20px;" onclick="backHome()">返回首页</button></div>`;
+    }
+
+    // ==================== 教师端 ====================
+    async function tUnlock() {
+        if (document.getElementById('t_pwd').value === 'putian2024') {
+            document.getElementById('t_dash').style.display = 'block';
+            document.querySelector('#appTeacher .card').style.display = 'none';
+            await tLoadData();
+        } else alert('密码错误');
+    }
+    async function tLoadData() {
+        let allData = await loadAllFromCloud();
+        window.teacherData = allData;
+        let sensoryCount = allData.filter(r => r.type === 'sensory').length;
+        let elderCount = allData.filter(r => r.type === 'elder').length;
+        let etongueCount = allData.filter(r => r.type === 'etongue').length;
+        let students = new Set(allData.map(r => r.stuId || r.elderId).filter(Boolean));
+        document.getElementById('t_stats').innerHTML = `
+            <div class="stat"><div class="stat-n">${sensoryCount}</div><div class="stat-l">感官评价</div></div>
+            <div class="stat"><div class="stat-n">${etongueCount}</div><div class="stat-l">电子舌记录</div></div>
+            <div class="stat"><div class="stat-n">${elderCount}</div><div class="stat-l">长辈评价</div></div>
+            <div class="stat"><div class="stat-n">${students.size}</div><div class="stat-l">参与人数</div></div>`;
+        let recsHtml = allData.slice(-20).reverse().map(r => `<div class="rec"><div class="rec-q">${r.sample || r.sample || '—'} · ${r.stuId || r.elderId || '匿名'}</div><div style="font-size:11px;color:#888;">${r.time} · ${r.overall ? '评分:' + r.overall : r.rating ? '评价:' + r.rating : ''}</div></div>`).join('');
+        document.getElementById('t_recs').innerHTML = recsHtml || '<div style="padding:20px;text-align:center;">暂无数据</div>';
+    }
+    function tExportCSV() {
+        if (!window.teacherData || !window.teacherData.length) { alert('暂无数据，请先点击“加载全部云端数据”'); return; }
+        let headers = ['时间', '类型', '学号', '姓名', '样品', '鲜味', '咸淡', '辣味', '酸味', '回味', '软硬', '咀嚼感', '总体', '购买意愿', '备注'];
+        let rows = window.teacherData.filter(r => r.type === 'sensory').map(r => [
+            r.time, r.type, r.stuId, r.stuName, r.sample,
+            r.umami, r.salt, r.spicy, r.sour, r.after, r.texture, r.chew, r.overall, r.buy, r.comment
+        ]);
+        let csv = [headers, ...rows].map(row => row.map(cell => `"${cell || ''}"`).join(',')).join('\n');
+        let blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `食品数据_${new Date().toLocaleDateString()}.csv`;
+        a.click();
+    }
+
+    // 隐藏功能：连点标题5次显示教师密码提示
+    let clickCount = 0;
+    function titleClick() {
+        clickCount++;
+        if (clickCount >= 5) { alert('教师端密码: putian2024'); clickCount = 0; }
+        setTimeout(() => clickCount = 0, 2000);
+    }
+
+    // 启动云初始化
+    initCloud();
+</script>
+</body>
+</html>
